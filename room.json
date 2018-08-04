@@ -1,0 +1,94 @@
+[
+    {   "name": "terasz",
+        "long": "Egy rémisztően régi ház teraszán állsz, mely sejtésed szerint olyan ősi titkot rejt, melyet igazán még magadnak sem mersz bevallani. A civilizációtól érintetlen erdő tisztását a napfény csak nehéz párákkal terhesen tudja megvilágítani, pedig kora délután érkeztél. A fura félhomályban ódon falak tornyosulnak fenyegetően föléd, korhadó favázukat kizárólag istenkáromló imádság tarthatja össze, a málló vakolat alól nedvesen csillogó téglák látszanak. A tető fazsindelyei viharvertek, nagy részük mohával borított. Az opálos ablaküvegek mögül rossz emlékek sötétje ásít, néhányuk bedeszkázva várja az elmúlást. Előtted, észak felé a bejárati ajtó vár rád.",
+        "status": ["visible"],
+        "vocabulary": ["ház", "házat", "házon", "terasz", "teraszt", "teraszon"],
+        "exits":    {   "N":    "előtér",
+                        "IN":   "előtér"
+                    }
+    }, {
+        "name": "előtér",
+        "long": "Tépett, málló, világoszöld mintás tapéta púposodik és kunkorodik az előtér erős dohszagot árasztó falain. A nedves falakat alul megfakult, penészes, itt-ott hiányos faburkolat takarja, nagyjából derékmagasságig. A hajópadló a lábad alatt hangosan tiltakozik a rég nem viselt teher ellen. A mennyezetről súlyos porréteggel terhelt pókhálók lógnak. Északra egy folyosóban folytatódik a helyiség, míg délre a bejárati ajtó van.",
+        "status": ["visible"],
+        "vocabulary": ["előtér", "előteret", "előtérben"],
+        "exits":    {   "N":    "folyosó",
+                        "S":    "terasz",
+                        "IN":   "folyosó",
+                        "OUT":  "terasz"
+                    }
+    }, {
+        "name": "folyosó",
+        "long": "A folyosó falait az ablakokból gyéren csordogáló napfény világítja meg. Bármilyen óvatosan is próbálkozol haladni, lépteid zaja puskalövésekként hallatszanak a síri csöndben. Két ajtót látsz: a faajtó nyugatra, az üvegajtó keletre vezet. Kísérteties félhomályba burkolózó lépcsőkarok tűnnek el le és felfelé a sötétben.",
+        "status": ["visible"],
+        "vocabulary": ["folyosó", "folyosót", "folyosón"],
+        "exits":    {   "E":    "konyha",
+                        "S":    "előtér",
+                        "W":    "szoba",
+                        "UP":   "padlás",
+                        "DOWN": "pince",
+                        "IN":   "szoba",
+                        "OUT":  "előtér"
+                    }
+    }, {
+        "name": "szoba",
+        "long": "A ház egyetlen szobája étkezőként, nappaliként és hálószobaként is szolgált. Az északi falon hatalmas, rég kihűlt kandalló feketén ásítja a kémyénkürtőből leszivárgó koromszagú hideget. Mellette életnagyságú férfiszobor felsőteste nehezedik egy vaskos tölgyfaállványra. A bútorokat, asztalokat, székeket, kanapékat és az ágyat vastag, nedves por festi szürkére. Egy faajtó vezet keletre.",
+        "status": ["visible"],
+        "vocabulary": ["szoba", "szobát", "szobában", "étkező", "étkezőt", "étkezőben", "nappali", "nappalit", "nappaliban"],
+        "exits":    {   "E":    "folyosó",
+                        "OUT":  "folyosó"
+                    }
+    }, {
+        "name": "konyha",
+        "long": "A konyhában szekrényajtós, fiókos konyhapult nyúlik végig az északi falon. Az öntöttvas mosogató valószerűtlenül elrozsdásodott, ahogy a csap is. Mindenütt por fedi a rég elhagyatott használati tárgyakat. A pult feletti szekrénysor ajtainak zsanérjai nem bírták az idő vasfogát, félig leszakadva lógnak. Az egyetlen kijárat, egy üvegajtó nyugatra van.",
+        "status": ["visible"],
+        "vocabulary": ["konyha", "konyhát", "konyhában"],
+        "exits":    {   "W":    "folyosó",
+                        "OUT":  "folyosó"
+                    }
+    }, {
+        "name": "pince",
+        "long": "A pince nedves falai miazmás gőzöket lihegnek a mozdulatlan levegőbe. Felismerhetetlenné rozsdásodott fém alkatrészek, törött üvegek, lámpák törmeléke van itt egy kupacban. A nyugati falon jóval frissebb, de még így is nagyon régi, sebtiben befalazott boltív látszik. A pincéből egy lépcső vezet felfelé.",
+        "status": [],
+        "vocabulary": ["pince", "pincét", "pincében"],
+        "exits":    {   "UP":   "folyosó",
+                        "OUT":  "folyosó"
+                    }
+    }, {
+        "name": "padlás",
+        "long": "A padlásablak félig megvakult üvegtábláin és a fazsindelyek közötti réseken betévedő napsugarak vigasztalhatatlan fényfoltokkal próbálják a sötétséget eloszlatni. Szúrágta, itt-ott korhadt szarufák sora veszik bele a sötétbe kelet felé. A padlásról lépcső vezet lefelé.",
+        "status": ["visible"],
+        "vocabulary": ["padlás", "padlást", "padláson"],
+        "exits":    {   "DOWN": "folyosó",
+                        "IN":   "hátsó padlás",
+                        "OUT":  "folyosó"
+                    }
+    }, {
+        "name": "hátsó padlás",
+        "long": "A mestergerendáról vaskos, poros pókháló lógnak le. A padlás végébe, a gerenda alá, óriási, vasalt faládát építettek; olyan nagy, hogy egyben nem fért volna fel a padláslépcsőn. Nyugat felé a padlás eleje játszik halvány kísértetfényben.",
+        "status": [],
+        "vocabulary": ["padlás", "padlást", "padláson"],
+        "exits":    {   "W":    "padlás",
+                        "DOWN": "rejtett pince",
+                        "IN":   "rejtett pince",
+                        "OUT":  "padlás"
+                    }
+    }, {
+        "name": "rejtett pince",
+        "long": "A ház elrejtett helyisége olyan régi benyomást kelt, hogy bele sem mersz gondolni. A falak, a kövek illesztési technikái furcsa, hátborzongató idegenséggel vesznek körül. A nyugati fal boltívének újabb keletű falazása, bár nem a kőműves mesterség csúcsa, mégis szinte otthonos barátsággal vonzza szemeidet. A keleti falra pillantva megáll benned az ütő: valami mintha átszivárgott volna a túloldalról egy alig kivehető, kolosszális kő ajtólap körvonalain át. A pince közepén egy hatalmas gép terpeszkedik.",
+        "status": [],
+        "vocabulary": ["pince", "pincét", "pincében"],
+        "exits":    {   "E":    "kősivatag",
+                        "UP":   "hátsó padlás",
+                        "IN":   "hátsó padlás",
+                        "OUT":  "kősivatag"
+                    }
+    }, {
+        "name": "sivatag",
+        "long": "Egy idegen világban vagy, éjszaka van. Az égbolton soha nem látott alakzatban ragyognak a csillagok, és egy vérszínű hold vonja kétségbeejtő árnyalatba a környezetet. A köves, sivatagos táj vigasztalan látványa alig elviselhető, amit nem enyhít a kifacsart, elszáradt, torz, tüskés bokrok és kaktuszok szívszorító magánya.",
+        "status": ["visible"],
+        "vocabulary": ["sivatag", "sivatagot", "sivatagban"],
+        "exits":    {   "W":    "rejtett pince",
+                        "IN":   "rejtett pince"
+                    }
+    }
+]

@@ -1,0 +1,4 @@
+{
+    "exit": ["kilépek", "abbahagyom"],
+    "go":   ["megyek", "elmegyek", ""]
+}
