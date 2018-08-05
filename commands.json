@@ -1,4 +1,3 @@
 {
-    "exit": ["kilépek", "abbahagyom"],
-    "go":   ["megyek", "elmegyek", ""]
+    "exit": ["kilépek", "abbahagyom", "vége"]
 }

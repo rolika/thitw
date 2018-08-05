@@ -1,8 +1,7 @@
-[
-    {
-        "name": "Henry Fuljames",
-        "long": "Henry Fuljames, a misztikus mizériák magánnyomozója",
-        "status": ["alive", "playing", "nowinner"],
-        "vocabulary": ["én", "magam", "magamat", "engem"]
-    }
-]
+{
+    "long": "Henry Fuljames, a misztikus mizériák magánnyomozója",
+    "status": ["alive", "playing", "nowinner"],
+    "words": ["én", "magam", "magamat", "engem"],
+    "location": "terasz",
+    "inventory": []
+}

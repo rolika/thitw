@@ -7,12 +7,10 @@ class AdventureElement(dict):
     def __init__(self, props):
         """init with property: value elements coming as dictionary from json file"""
         super().__init__(props)
-        self["status"] = set(self["status"])
-        self["vocabulary"] = set(self["vocabulary"])
 
     def __str__(self):
         """pretty print for testing"""
-        return "{}\n{}".format(self["name"], self["long"])
+        return "{}\n{}".format(self, self["long"])
 
     def check(self, prop, *values, logic=all):
         """check element's property containing certain values"""
@@ -42,8 +40,8 @@ class Player(AdventureElement):
 if __name__ == "__main__":
     """testing stuff"""
     import json
-    with open("places.json") as fp:
-        places = {place["name"]: Room(place) for place in json.load(fp)}
-        for place in places:
-            if places[place].destination("UP"):
-                print(places[place]["exits"]["UP"])
+    with open("room.json") as fp:
+        rooms = json.load(fp)
+    rooms = ({room: Room(rooms[room]) for room in rooms})
+    print(rooms)
+
