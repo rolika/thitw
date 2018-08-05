@@ -8,19 +8,20 @@ from collections import namedtuple
 
 
 def main():
-    # storing adventure-elements in a named tuple
+    # storing adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages")
 
     # game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         print(adv.rooms[adv.player["location"]]["long"])
         print(parse(input("> ").lower(), adv))
+        adv.player["status"].add("regular")
+        print(adv.player["status"])
 
 
 def setup(*elements):
     """elements correspond to .json filenames"""
-    adv = namedtuple("adv", " ".join(elements))
-    return adv._make(init(elem) for elem in elements)
+    return namedtuple("adv", " ".join(elements))._make(map(init, elements))
 
 def init(element):
     """adventure elements stored in dictionary"""
