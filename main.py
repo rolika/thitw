@@ -9,14 +9,12 @@ from collections import namedtuple
 
 def main():
     # storing adventure-elements in a named tuple, for access like adv.rooms or adv.player
-    adv = setup("rooms", "player", "commands", "messages")
+    adv = setup("rooms", "player", "commands", "messages", "direction")
 
     # game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         print(adv.rooms[adv.player["location"]]["long"])
         print(parse(input("> ").lower(), adv))
-        adv.player["status"].add("regular")
-        print(adv.player["status"])
 
 
 def setup(*elements):
@@ -43,9 +41,10 @@ def check(collection, *values, logic=all):
 
 def parse(command, adv):
     """parse player command"""
-    expletive = re.compile(r"\s*(?:\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
+    expletive = re.compile(r"\s*(?:\b \b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     execute = {
-        "exit": exit_game
+        "exit": exit_game,
+        "move": move
     }
     command = [word for word in expletive.split(command) if word]
     # first, look up for a commanding verb
@@ -70,9 +69,25 @@ def exit_game(command, adv):
         return adv.messages["bye"]
     return adv.messages["ok"]
 
+def move(command, adv):
+    """player tries to move in a given direction"""
+    drc = direction(command, adv)
+    destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
+    if drc and destination:
+        adv.player["location"] = destination
+        return adv.messages["ok"]
+    return adv.messages["cantgo"]
+
 
 def are_you_sure():
     return input("Biztos vagy benne? ").lower().startswith("i")
+
+def direction(command, adv):
+    """identify direction in command"""
+    for drc, words in adv.direction.items():
+        if check(words, *command, logic=any):
+            return drc
+    return None
 
 
 if __name__ == "__main__":
