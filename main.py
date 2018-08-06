@@ -57,7 +57,9 @@ def parse(command, adv):
                     pass
             return execute[com](command, adv)
     # second, look up for a movement direction
-    pass
+    for drc, words in adv.direction.items():
+        if check(words, *command, logic=any):
+            return execute["move"](command, adv)
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
