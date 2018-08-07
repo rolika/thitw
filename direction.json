@@ -1,0 +1,14 @@
+{
+    "n": ["é", "észak", "északra", "északnak"],
+    "ne": ["ék", "északkelet", "északkeletre", "északkeletnek"],
+    "e": ["k", "kelet", "keletre", "keletnek"],
+    "se": ["dk", "délkelet", "délkeletre", "délkeletnek"],
+    "s": ["d", "dél", "délre", "délnek"],
+    "sw": ["dny", "délnyugat", "délnyugatra", "délnyugatnak"],
+    "w": ["ny", "nyugat", "nyugatra", "nyugatnak"],
+    "nw": ["ény", "északnyugat", "északnyugatra", "északnyugatnak"],
+    "up": ["fel", "felfelé", "felfele"],
+    "down": ["le", "lefelé", "lefele"],
+    "in": ["be", "bemegyek", "befelé", "befele", "bemászok", "bekúszok"],
+    "out": ["ki", "kimegyek", "kifelé", "kifele", "kimászok", "kikúszok"]
+}

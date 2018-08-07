@@ -5,15 +5,17 @@ Main game script
 import json
 import re
 from collections import namedtuple
+import textwrap
 
 
 def main():
-    # storing adventure-elements in a named tuple, for access like adv.rooms or adv.player
+    # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages", "direction")
 
     # game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
-        print(adv.rooms[adv.player["location"]]["long"])
+        print(textwrap.fill(show(adv), width=80))
+        adv.rooms[adv.player["location"]]["status"].add("visited")
         print(parse(input("> ").lower(), adv))
 
 
@@ -34,30 +36,25 @@ def list2set(element):
     return element
 
 
-def check(collection, *values, logic=all):
-    """check if certain values are present in collection"""
-    return logic(value in collection for value in values)
-
-
 def parse(command, adv):
     """parse player command"""
-    expletive = re.compile(r"\s*(?:\b \b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
+    explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     execute = {
         "exit": exit_game,
         "move": move
     }
-    command = [word for word in expletive.split(command) if word]
+    command = [word for word in explet.split(command) if word]
     # first, look up for a commanding verb
-    for com in adv.commands:
-        if check(adv.commands[com], *command, logic=any):
-            for verb in adv.commands[com]:  # remove verb from command
+    for com, words in adv.commands.items():
+        if check(words, *command, logic=any):
+            for verb in words:  # remove verb from command
                 try:
                     command.remove(verb)
                 except ValueError:
                     pass
             return execute[com](command, adv)
     # second, look up for a movement direction
-    for drc, words in adv.direction.items():
+    for words in adv.direction.values():
         if check(words, *command, logic=any):
             return execute["move"](command, adv)
     # at last, the parser doesn't understand
@@ -81,7 +78,12 @@ def move(command, adv):
     return adv.messages["cantgo"]
 
 
+def check(collection, *values, logic=all):
+    """check if certain values are present in collection"""
+    return logic(value in collection for value in values)
+
 def are_you_sure():
+    """answer yes or no"""
     return input("Biztos vagy benne? ").lower().startswith("i")
 
 def direction(command, adv):
@@ -90,6 +92,17 @@ def direction(command, adv):
         if check(words, *command, logic=any):
             return drc
     return None
+
+def show(adv):
+    """provide environment description"""
+    location = adv.rooms[adv.player["location"]]
+    if "visible" in location["status"]:
+        if "verbose" in adv.player["status"]:
+            return location["long"]
+        if "short" in adv.player["status"] or "visited" in location["status"]:
+            return adv.player["location"].capitalize() + "."
+        return location["long"]
+    return adv.messages["toodark"]
 
 
 if __name__ == "__main__":
