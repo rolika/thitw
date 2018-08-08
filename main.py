@@ -1,47 +1,34 @@
 """
-Main game script
+The House in the Woods
+Text adventure game
 """
 
 import json
 import re
 from collections import namedtuple
 import textwrap
+import readline  # input() remembers previous entries
+import sys
 
 
 def main():
     # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages", "direction")
 
-    # game loop
+    # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         print(textwrap.fill(show(adv), width=80))
         adv.rooms[adv.player["location"]]["status"].add("visited")
         print(parse(input("> ").lower(), adv))
 
-
-def setup(*elements):
-    """elements correspond to .json filenames"""
-    return namedtuple("adv", " ".join(elements))._make(map(init, elements))
-
-def init(element):
-    """adventure elements stored in dictionary"""
-    with open(element+".json", "r") as fo:
-        return json.load(fo, object_hook=list2set)
-
-def list2set(element):
-    """lists should become sets"""
-    for key in element:
-        if type(element[key]) is list:
-            element[key] = set(element[key])
-    return element
-
-
 def parse(command, adv):
-    """parse player command"""
+    """parser for player's commands"""
     explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     execute = {
         "exit": exit_game,
-        "move": move
+        "move": move,
+        "save": save,
+        "restore": restore
     }
     command = [word for word in explet.split(command) if word]
     # first, look up for a commanding verb
@@ -61,6 +48,8 @@ def parse(command, adv):
     return adv.messages["???"]
 
 
+# handler functions
+
 def exit_game(command, adv):
     """player exits the game"""
     if are_you_sure():
@@ -77,6 +66,39 @@ def move(command, adv):
         return adv.messages["ok"]
     return adv.messages["cantgo"]
 
+def save(command, adv):
+    """save game to .json file - provide filename ending .save"""
+    tosave = {"player": {"status": list(adv.player["status"]),
+                         "location": adv.player["location"],
+                         "inventory": list(adv.player["inventory"])}}
+    tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
+    if dump(tosave, savefile(command) + ".save"):
+        return adv.messages["ok"]
+    return adv.messages["oops"]    
+
+def restore(command, adv):
+    """restore saved game - look for provided filename ending .save"""
+    rst = load(savefile(command), ext="save")
+    if rst:
+        # restore player
+        adv.player["status"].clear()
+        adv.player["inventory"].clear()
+        adv.player["status"].update(rst["player"]["status"])
+        adv.player["inventory"].update(rst["player"]["inventory"])
+        adv.player["location"] = rst["player"]["location"]
+        # restore room's status
+        for room, status in rst["rooms"].items():
+            adv.rooms[room]["status"].clear()
+            adv.rooms[room]["status"].update(status)
+        return adv.messages["ok"]
+    return adv.messages["oops"]
+
+
+# helper functions
+
+def setup(*elements):
+    """elements correspond to .json filenames"""
+    return namedtuple("adv", " ".join(elements))._make(map(load, elements))
 
 def check(collection, *values, logic=all):
     """check if certain values are present in collection"""
@@ -103,6 +125,42 @@ def show(adv):
             return adv.player["location"].capitalize() + "."
         return location["long"]
     return adv.messages["toodark"]
+
+
+# json data persistence
+
+def load(element, ext="json"):
+    """adventure elements stored in dictionary"""
+    try:
+        with open(element + "." + ext, "r") as fo:
+            return json.load(fo, object_hook=list2set)
+    except (IOError, json.JSONDecodeError):
+        return None
+
+def dump(content, filename):
+    """write game data in json format"""
+    try:
+        with open(filename, "w") as fp:
+            json.dump(content, fp, ensure_ascii=False, indent=4)
+        return True
+    except (IOError, json.JSONDecodeError):
+        return False
+
+def list2set(element):
+    """lists should become sets"""
+    for key in element:
+        if type(element[key]) is list:
+            element[key] = set(element[key])
+    return element
+
+def savefile(command):
+    """create or read savefile-name"""
+    sf = "default"
+    for com in command:
+        if com.endswith(".save"):
+            sf = com.split(".")[0]
+            break
+    return sf
 
 
 if __name__ == "__main__":
