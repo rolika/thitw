@@ -15,6 +15,10 @@ def main():
     # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages", "direction")
 
+    if not all(adv):
+        print("Something went wrong, unable to start the game.", file=sys.stderr)
+        sys.exit()
+
     # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         print(textwrap.fill(show(adv), width=80))
@@ -25,7 +29,7 @@ def parse(command, adv):
     """parser for player's commands"""
     explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     execute = {
-        "exit": exit_game,
+        "leave": leave,
         "move": move,
         "save": save,
         "restore": restore
@@ -50,7 +54,7 @@ def parse(command, adv):
 
 # handler functions
 
-def exit_game(command, adv):
+def leave(command, adv):
     """player exits the game"""
     if are_you_sure():
         adv.player["status"].remove("playing")
@@ -74,7 +78,7 @@ def save(command, adv):
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
     if dump(tosave, savefile(command) + ".save"):
         return adv.messages["ok"]
-    return adv.messages["oops"]    
+    return adv.messages["!!!"]    
 
 def restore(command, adv):
     """restore saved game - look for provided filename ending .save"""
@@ -91,7 +95,7 @@ def restore(command, adv):
             adv.rooms[room]["status"].clear()
             adv.rooms[room]["status"].update(status)
         return adv.messages["ok"]
-    return adv.messages["oops"]
+    return adv.messages["!!!"]
 
 
 # helper functions
