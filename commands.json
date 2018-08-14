@@ -2,5 +2,6 @@
     "leave": ["kilépek", "abbahagyom", "vége"],
     "move": ["megyek", "elmegyek", "elmászok", "elmászom"],
     "save": ["ment", "mentek", "mentés", "save"],
-    "restore": ["tölt", "töltök", "töltés", "betölt", "betöltök", "betöltés", "load"]
+    "restore": ["tölt", "töltök", "töltés", "betölt", "betöltök", "betöltés", "load"],
+    "steps": ["lépés", "lépések", "lépésszám"]
 }

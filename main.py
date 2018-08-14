@@ -40,7 +40,9 @@ def main():
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         get_room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
-        parse(input("> ").lower(), adv)
+        parse(input("{} "\
+            .format(">" if adv.player["steps"] > 5 else adv.messages["prompt"])).lower(), adv)
+        adv.player["steps"] += 1
 
 
 # helper functions
@@ -54,7 +56,8 @@ def parse(command, adv):
         "leave": leave,
         "move": move,
         "save": save,
-        "restore": restore
+        "restore": restore,
+        "steps": steps
     }
     command = [word for word in explet.split(command) if word]
     # first, look up for a commanding verb
@@ -164,7 +167,8 @@ def save(command, adv):
     """save game to .json file - provide filename ending .save"""
     tosave = {"player": {"status": list(adv.player["status"]),
                          "location": adv.player["location"],
-                         "inventory": list(adv.player["inventory"])}}
+                         "inventory": list(adv.player["inventory"]),
+                         "steps": adv.player["steps"]}}
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
     if dump(tosave, savefile(command) + ".save"):
         return adv.messages["ok"]
@@ -180,12 +184,17 @@ def restore(command, adv):
         adv.player["status"].update(rst["player"]["status"])
         adv.player["inventory"].update(rst["player"]["inventory"])
         adv.player["location"] = rst["player"]["location"]
+        adv.player["steps"] = rst["player"]["steps"]
         # restore room's status
         for room, status in rst["rooms"].items():
             adv.rooms[room]["status"].clear()
             adv.rooms[room]["status"].update(status)
         return adv.messages["ok"]
     return adv.messages["!!!"]
+
+def steps(command, adv):
+    """show player's step count"""
+    return adv.messages["steps"].format(adv.player["steps"])
 
 
 if __name__ == "__main__":

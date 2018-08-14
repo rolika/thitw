@@ -3,5 +3,6 @@
     "status": ["alive", "playing", "nowinner"],
     "words": ["én", "magam", "magamat", "engem"],
     "location": "terasz",
-    "inventory": []
+    "inventory": [],
+    "steps": 0
 }

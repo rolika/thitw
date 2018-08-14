@@ -4,5 +4,7 @@
     "bye": "Viszlát!",
     "cantgo": "Arra nem mehetsz.",
     "toodark": "Túl sötét van, nem látsz semmit.",
-    "!!!": "Hoppá, valami elromlott..."
+    "!!!": "Hoppá, valami elromlott...",
+    "prompt": "Most mit teszel?",
+    "steps": "Eddig {} lépést tettél a játékban."
 }
