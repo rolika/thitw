@@ -11,6 +11,23 @@ import readline  # input() remembers previous entries
 import sys
 
 
+# decorator functions
+
+def wrap(func):
+    """wrap lines"""
+    def wrapper(*args):
+        return textwrap.fill(func(*args), width=80)
+    return wrapper
+
+def show(func):
+    """show description on stdout"""
+    def wrapper(*args):
+        print(func(*args))
+    return wrapper
+
+
+# main executing function
+
 def main():
     # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages", "direction")
@@ -21,10 +38,15 @@ def main():
 
     # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
-        print(textwrap.fill(show(adv), width=80))
+        get_room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
-        print(parse(input("> ").lower(), adv))
+        parse(input("> ").lower(), adv)
 
+
+# helper functions
+
+@show
+@wrap
 def parse(command, adv):
     """parser for player's commands"""
     explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
@@ -51,54 +73,18 @@ def parse(command, adv):
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
-
-# handler functions
-
-def leave(command, adv):
-    """player exits the game"""
-    if are_you_sure():
-        adv.player["status"].remove("playing")
-        return adv.messages["bye"]
-    return adv.messages["ok"]
-
-def move(command, adv):
-    """player tries to move in a given direction"""
-    drc = direction(command, adv)
-    destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
-    if drc and destination:
-        adv.player["location"] = destination
-        return adv.messages["ok"]
-    return adv.messages["cantgo"]
-
-def save(command, adv):
-    """save game to .json file - provide filename ending .save"""
-    tosave = {"player": {"status": list(adv.player["status"]),
-                         "location": adv.player["location"],
-                         "inventory": list(adv.player["inventory"])}}
-    tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
-    if dump(tosave, savefile(command) + ".save"):
-        return adv.messages["ok"]
-    return adv.messages["!!!"]    
-
-def restore(command, adv):
-    """restore saved game - look for provided filename ending .save"""
-    rst = load(savefile(command), ext="save")
-    if rst:
-        # restore player
-        adv.player["status"].clear()
-        adv.player["inventory"].clear()
-        adv.player["status"].update(rst["player"]["status"])
-        adv.player["inventory"].update(rst["player"]["inventory"])
-        adv.player["location"] = rst["player"]["location"]
-        # restore room's status
-        for room, status in rst["rooms"].items():
-            adv.rooms[room]["status"].clear()
-            adv.rooms[room]["status"].update(status)
-        return adv.messages["ok"]
-    return adv.messages["!!!"]
-
-
-# helper functions
+@show
+@wrap
+def get_room_description(adv):
+    """provide room description"""
+    location = adv.rooms[adv.player["location"]]
+    if "visible" in location["status"]:
+        if "verbose" in adv.player["status"]:
+            return location["long"]
+        if "short" in adv.player["status"] or "visited" in location["status"]:
+            return adv.player["location"].capitalize() + "."
+        return location["long"]
+    return adv.messages["toodark"]
 
 def setup(*elements):
     """elements correspond to .json filenames"""
@@ -118,17 +104,6 @@ def direction(command, adv):
         if check(words, *command, logic=any):
             return drc
     return None
-
-def show(adv):
-    """provide environment description"""
-    location = adv.rooms[adv.player["location"]]
-    if "visible" in location["status"]:
-        if "verbose" in adv.player["status"]:
-            return location["long"]
-        if "short" in adv.player["status"] or "visited" in location["status"]:
-            return adv.player["location"].capitalize() + "."
-        return location["long"]
-    return adv.messages["toodark"]
 
 
 # json data persistence
@@ -165,6 +140,52 @@ def savefile(command):
             sf = com.split(".")[0]
             break
     return sf
+
+
+# handler functions
+
+def leave(command, adv):
+    """player exits the game"""
+    if are_you_sure():
+        adv.player["status"].remove("playing")
+        return adv.messages["bye"]
+    return adv.messages["ok"]
+
+def move(command, adv):
+    """player tries to move in a given direction"""
+    drc = direction(command, adv)
+    destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
+    if drc and destination:
+        adv.player["location"] = destination
+        return adv.messages["ok"]
+    return adv.messages["cantgo"]
+
+def save(command, adv):
+    """save game to .json file - provide filename ending .save"""
+    tosave = {"player": {"status": list(adv.player["status"]),
+                         "location": adv.player["location"],
+                         "inventory": list(adv.player["inventory"])}}
+    tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
+    if dump(tosave, savefile(command) + ".save"):
+        return adv.messages["ok"]
+    return adv.messages["!!!"]
+
+def restore(command, adv):
+    """restore saved game - look for provided filename ending .save"""
+    rst = load(savefile(command), ext="save")
+    if rst:
+        # restore player
+        adv.player["status"].clear()
+        adv.player["inventory"].clear()
+        adv.player["status"].update(rst["player"]["status"])
+        adv.player["inventory"].update(rst["player"]["inventory"])
+        adv.player["location"] = rst["player"]["location"]
+        # restore room's status
+        for room, status in rst["rooms"].items():
+            adv.rooms[room]["status"].clear()
+            adv.rooms[room]["status"].update(status)
+        return adv.messages["ok"]
+    return adv.messages["!!!"]
 
 
 if __name__ == "__main__":
