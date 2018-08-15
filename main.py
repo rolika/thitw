@@ -40,8 +40,7 @@ def main():
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         get_room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
-        parse(input("{} "\
-            .format(">" if adv.player["steps"] > 5 else adv.messages["prompt"])).lower(), adv)
+        parse(player_input(adv))
         adv.player["steps"] += 1
 
 
@@ -49,9 +48,8 @@ def main():
 
 @show
 @wrap
-def parse(command, adv):
+def parse(adv):
     """parser for player's commands"""
-    explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     execute = {
         "leave": leave,
         "move": move,
@@ -59,20 +57,19 @@ def parse(command, adv):
         "restore": restore,
         "steps": steps
     }
-    command = [word for word in explet.split(command) if word]
     # first, look up for a commanding verb
     for com, words in adv.commands.items():
-        if check(words, *command, logic=any):
+        if check(words, *adv.player["command"], logic=any):
             for verb in words:  # remove verb from command
                 try:
-                    command.remove(verb)
+                    adv.player["command"].remove(verb)
                 except ValueError:
                     pass
-            return execute[com](command, adv)
+            return execute[com](adv)
     # second, look up for a movement direction
     for words in adv.direction.values():
-        if check(words, *command, logic=any):
-            return execute["move"](command, adv)
+        if check(words, *adv.player["command"], logic=any):
+            return execute["move"](adv)
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
@@ -89,6 +86,30 @@ def get_room_description(adv):
         return location["long"]
     return adv.messages["toodark"]
 
+def savefile(adv):
+    """create or read savefile-name"""
+    sf = "default"
+    for com in adv.player["command"]:
+        if com.endswith(".save"):
+            sf = com.split(".")[0]
+            break
+    return sf
+
+def direction(adv):
+    """identify direction in command"""
+    for drc, words in adv.direction.items():
+        if check(words, *adv.player["command"], logic=any):
+            return drc
+    return None
+
+def player_input(adv):
+    """read player's next command"""
+    explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
+    prompt = ">" if adv.player["steps"] > 5 else adv.messages["prompt"]
+    command = input("{} ".format(prompt)).lower()
+    adv.player["command"] = [word for word in explet.split(command) if word]
+    return adv
+
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
@@ -100,13 +121,6 @@ def check(collection, *values, logic=all):
 def are_you_sure():
     """answer yes or no"""
     return input("Biztos vagy benne? ").lower().startswith("i")
-
-def direction(command, adv):
-    """identify direction in command"""
-    for drc, words in adv.direction.items():
-        if check(words, *command, logic=any):
-            return drc
-    return None
 
 
 # json data persistence
@@ -135,48 +149,39 @@ def list2set(element):
             element[key] = set(element[key])
     return element
 
-def savefile(command):
-    """create or read savefile-name"""
-    sf = "default"
-    for com in command:
-        if com.endswith(".save"):
-            sf = com.split(".")[0]
-            break
-    return sf
-
 
 # handler functions
 
-def leave(command, adv):
+def leave(adv):
     """player exits the game"""
     if are_you_sure():
         adv.player["status"].remove("playing")
         return adv.messages["bye"]
     return adv.messages["ok"]
 
-def move(command, adv):
+def move(adv):
     """player tries to move in a given direction"""
-    drc = direction(command, adv)
+    drc = direction(adv)
     destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
     if drc and destination:
         adv.player["location"] = destination
         return adv.messages["ok"]
     return adv.messages["cantgo"]
 
-def save(command, adv):
+def save(adv):
     """save game to .json file - provide filename ending .save"""
     tosave = {"player": {"status": list(adv.player["status"]),
                          "location": adv.player["location"],
                          "inventory": list(adv.player["inventory"]),
                          "steps": adv.player["steps"]}}
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
-    if dump(tosave, savefile(command) + ".save"):
+    if dump(tosave, savefile(adv) + ".save"):
         return adv.messages["ok"]
     return adv.messages["!!!"]
 
-def restore(command, adv):
+def restore(adv):
     """restore saved game - look for provided filename ending .save"""
-    rst = load(savefile(command), ext="save")
+    rst = load(savefile(adv), ext="save")
     if rst:
         # restore player
         adv.player["status"].clear()
@@ -192,7 +197,7 @@ def restore(command, adv):
         return adv.messages["ok"]
     return adv.messages["!!!"]
 
-def steps(command, adv):
+def steps(adv):
     """show player's step count"""
     return adv.messages["steps"].format(adv.player["steps"])
 
