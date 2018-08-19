@@ -5,5 +5,6 @@
     "location": "terasz",
     "inventory": [],
     "steps": 0,
-    "command": ""
+    "command": "",
+    "commands": []
 }

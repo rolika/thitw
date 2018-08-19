@@ -31,6 +31,7 @@ def show(func):
 def main():
     # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
     adv = setup("rooms", "player", "commands", "messages", "direction")
+    adv.player["commands"] = create_handlers(adv.commands)
 
     if not all(adv):
         print("Something went wrong, unable to start the game.", file=sys.stderr)
@@ -50,13 +51,7 @@ def main():
 @wrap
 def parse(adv):
     """parser for player's commands"""
-    execute = {
-        "leave": leave,
-        "move": move,
-        "save": save,
-        "restore": restore,
-        "steps": steps
-    }
+    execute = adv.player["commands"]
     # first, look up for a commanding verb
     for com, words in adv.commands.items():
         if check(words, *adv.player["command"], logic=any):
@@ -113,6 +108,10 @@ def player_input(adv):
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
+
+def create_handlers(commands):
+    """dynamically create handler functions"""
+    return {command: eval(command) for command in commands}
 
 def check(collection, *values, logic=all):
     """check if certain values are present in collection"""
