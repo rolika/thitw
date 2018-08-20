@@ -9,28 +9,29 @@ from collections import namedtuple
 import textwrap
 import readline  # input() remembers previous entries
 import sys
+import os
 
 
 # decorator functions
 
-def wrap(func):
+def linewrap(func):
     """wrap lines"""
-    def wrapper(*args):
+    def linewrapper(*args):
         return textwrap.fill(func(*args), width=80)
-    return wrapper
+    return linewrapper
 
 def show(func):
     """show description on stdout"""
-    def wrapper(*args):
+    def shower(*args):
         print(func(*args))
-    return wrapper
+    return shower
 
 
 # main executing function
 
 def main():
-    # store adventure-elements in a named tuple, for access like adv.rooms or adv.player
-    adv = setup("rooms", "player", "commands", "messages", "direction")
+    # adventure-elements in a named tuple, access like adv.rooms or adv.player
+    adv = setup(*get_jsons())
     adv.player["commands"] = create_handlers(adv.commands)
 
     if not all(adv):
@@ -39,7 +40,7 @@ def main():
 
     # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
-        get_room_description(adv)
+        room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
         parse(player_input(adv))
         adv.player["steps"] += 1
@@ -48,7 +49,7 @@ def main():
 # helper functions
 
 @show
-@wrap
+@linewrap
 def parse(adv):
     """parser for player's commands"""
     execute = adv.player["commands"]
@@ -69,8 +70,8 @@ def parse(adv):
     return adv.messages["???"]
 
 @show
-@wrap
-def get_room_description(adv):
+@linewrap
+def room_description(adv):
     """provide room description"""
     location = adv.rooms[adv.player["location"]]
     if "visible" in location["status"]:
@@ -80,15 +81,6 @@ def get_room_description(adv):
             return adv.player["location"].capitalize() + "."
         return location["long"]
     return adv.messages["toodark"]
-
-def savefile(adv):
-    """create or read savefile-name"""
-    sf = "default"
-    for com in adv.player["command"]:
-        if com.endswith(".save"):
-            sf = com.split(".")[0]
-            break
-    return sf
 
 def direction(adv):
     """identify direction in command"""
@@ -124,6 +116,11 @@ def are_you_sure():
 
 # json data persistence
 
+def get_jsons():
+    """get all .json filenames from current directory"""
+    with os.scandir() as it:
+        return [entry.name.split(".")[0] for entry in it if entry.name.endswith(".json")]
+
 def load(element, ext="json"):
     """adventure elements stored in dictionary"""
     try:
@@ -147,6 +144,15 @@ def list2set(element):
         if type(element[key]) is list:
             element[key] = set(element[key])
     return element
+
+def savefile(adv):
+    """create or read savefile-name"""
+    sf = "default"
+    for com in adv.player["command"]:
+        if com.endswith(".save"):
+            sf = com.split(".")[0]
+            break
+    return sf
 
 
 # handler functions
