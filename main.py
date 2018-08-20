@@ -12,18 +12,42 @@ import sys
 import os
 
 
+# constants
+
+EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
+
+
+# decorator classes: https://www.artima.com/weblogs/viewpost.jsp?thread=240808 and 240845
+# if the decorator has any arguments, using classes seems more understandable
+
+class Split:
+    """decorator class for regex splitting"""
+    def __init__(self, split_at):
+        """decorator argument is a raw string regexp"""
+        self.split_at = re.compile(split_at, flags=re.IGNORECASE)
+
+    def __call__(self, func):
+        """make the class callable, taking a function as argument"""
+        def splitter(adv):
+            """makes the actual splitting with the decorated function's argument"""
+            adv.player["command"] = list(filter(None, self.split_at.split(func(adv))))
+            return adv
+        return splitter
+
+
 # decorator functions
+# if the decorator takes no arguments, this is simple enough
 
 def linewrap(func):
     """wrap lines"""
-    def linewrapper(*args):
-        return textwrap.fill(func(*args), width=80)
+    def linewrapper(adv):
+        return textwrap.fill(func(adv), width=80)
     return linewrapper
 
 def show(func):
-    """show description on stdout"""
-    def shower(*args):
-        print(func(*args))
+    """show description"""
+    def shower(adv):
+        print(func(adv))
     return shower
 
 
@@ -89,14 +113,12 @@ def direction(adv):
             return drc
     return None
 
+@Split(EXPLET)
 def player_input(adv):
     """read player's next command"""
-    explet = re.compile(r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*", flags=re.IGNORECASE)
     prompt = ">" if adv.player["steps"] > 5 else adv.messages["prompt"]
-    command = input("{} ".format(prompt)).lower()
-    adv.player["command"] = [word for word in explet.split(command) if word]
-    return adv
-
+    return input("{} ".format(prompt)).lower()
+    
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
