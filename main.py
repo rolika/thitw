@@ -36,7 +36,7 @@ class Split:
 
 
 # decorator functions
-# if the decorator takes no arguments, this is simple enough
+# if the decorator takes no arguments, this way is simple enough
 
 def linewrap(func):
     """wrap lines"""
@@ -49,6 +49,28 @@ def show(func):
     def shower(adv):
         print(func(adv))
     return shower
+
+def react(func):
+    """parse and execute player's command"""
+    def reactor(adv):
+        adv = func(adv)
+        execute = adv.player["commands"]
+        # first, look up for a verb
+        for com, words in adv.commands.items():
+            if check(words, *adv.player["command"], logic=any):
+                for verb in words:  # remove verb from command
+                    try:
+                        adv.player["command"].remove(verb)
+                    except ValueError:
+                        pass
+                return execute[com](adv)
+        # second, look up for a movement direction
+        for words in adv.direction.values():
+            if check(words, *adv.player["command"], logic=any):
+                return execute["move"](adv)
+        # at last, the parser doesn't understand
+        return adv.messages["???"]
+    return reactor
 
 
 # main executing function
@@ -66,32 +88,11 @@ def main():
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
-        parse(player_input(adv))
+        player_input(adv)
         adv.player["steps"] += 1
 
 
 # helper functions
-
-@show
-@linewrap
-def parse(adv):
-    """parser for player's commands"""
-    execute = adv.player["commands"]
-    # first, look up for a commanding verb
-    for com, words in adv.commands.items():
-        if check(words, *adv.player["command"], logic=any):
-            for verb in words:  # remove verb from command
-                try:
-                    adv.player["command"].remove(verb)
-                except ValueError:
-                    pass
-            return execute[com](adv)
-    # second, look up for a movement direction
-    for words in adv.direction.values():
-        if check(words, *adv.player["command"], logic=any):
-            return execute["move"](adv)
-    # at last, the parser doesn't understand
-    return adv.messages["???"]
 
 @show
 @linewrap
@@ -106,19 +107,15 @@ def room_description(adv):
         return location["long"]
     return adv.messages["toodark"]
 
-def direction(adv):
-    """identify direction in command"""
-    for drc, words in adv.direction.items():
-        if check(words, *adv.player["command"], logic=any):
-            return drc
-    return None
-
+@show
+@linewrap
+@react
 @Split(EXPLET)
 def player_input(adv):
     """read player's next command"""
     prompt = ">" if adv.player["steps"] > 5 else adv.messages["prompt"]
     return input("{} ".format(prompt)).lower()
-    
+
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
@@ -134,6 +131,13 @@ def check(collection, *values, logic=all):
 def are_you_sure():
     """answer yes or no"""
     return input("Biztos vagy benne? ").lower().startswith("i")
+
+def direction(adv):
+    """identify direction in command"""
+    for drc, words in adv.direction.items():
+        if check(words, *adv.player["command"], logic=any):
+            return drc
+    return None
 
 
 # json data persistence
