@@ -15,6 +15,9 @@ import os
 # constants
 
 EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
+WRAP_WIDTH = 80
+HISTORY_LENGTH = 1000
+CHANGE_PROMPT = 5
 
 
 # decorator classes: https://www.artima.com/weblogs/viewpost.jsp?thread=240808 and 240845
@@ -41,7 +44,7 @@ class Split:
 def linewrap(func):
     """wrap lines"""
     def linewrapper(adv):
-        return textwrap.fill(func(adv), width=80)
+        return textwrap.fill(func(adv), width=WRAP_WIDTH)
     return linewrapper
 
 def show(func):
@@ -58,11 +61,6 @@ def react(func):
         # first, look up for a verb
         for com, words in adv.commands.items():
             if check(words, *adv.player["command"], logic=any):
-                for verb in words:  # remove verb from command
-                    try:
-                        adv.player["command"].remove(verb)
-                    except ValueError:
-                        pass
                 return execute[com](adv)
         # second, look up for a movement direction
         for words in adv.direction.values():
@@ -72,24 +70,35 @@ def react(func):
         return adv.messages["???"]
     return reactor
 
+def increase_step(func):
+    """increase step count"""
+    def stepper(adv):
+        adv.player["step"] += 1
+        return func(adv)
+    return stepper
+
 
 # main executing function
 
 def main():
     # adventure-elements in a named tuple, access like adv.rooms or adv.player
     adv = setup(*get_jsons())
+    if not all(adv):
+        sys.exit("Something went wrong, unable to start the game.")
+        
     adv.player["commands"] = create_handlers(adv.commands)
 
-    if not all(adv):
-        print("Something went wrong, unable to start the game.", file=sys.stderr)
-        sys.exit()
+    # init readline history
+    readline.set_history_length(HISTORY_LENGTH)
+    readline.clear_history()
+    readline.set_auto_history(True)
 
     # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
         player_input(adv)
-        adv.player["steps"] += 1
+        increase_step(adv)
 
 
 # helper functions
@@ -113,7 +122,7 @@ def room_description(adv):
 @Split(EXPLET)
 def player_input(adv):
     """read player's next command"""
-    prompt = ">" if adv.player["steps"] > 5 else adv.messages["prompt"]
+    prompt = ">" if adv.player["step"] > CHANGE_PROMPT else adv.messages["prompt"]
     return input("{} ".format(prompt)).lower()
 
 def setup(*elements):
@@ -190,6 +199,7 @@ def leave(adv):
         return adv.messages["bye"]
     return adv.messages["ok"]
 
+@increase_step
 def move(adv):
     """player tries to move in a given direction"""
     drc = direction(adv)
@@ -204,7 +214,7 @@ def save(adv):
     tosave = {"player": {"status": list(adv.player["status"]),
                          "location": adv.player["location"],
                          "inventory": list(adv.player["inventory"]),
-                         "steps": adv.player["steps"]}}
+                         "step": adv.player["step"]}}
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
     if dump(tosave, savefile(adv) + ".save"):
         return adv.messages["ok"]
@@ -220,7 +230,7 @@ def restore(adv):
         adv.player["status"].update(rst["player"]["status"])
         adv.player["inventory"].update(rst["player"]["inventory"])
         adv.player["location"] = rst["player"]["location"]
-        adv.player["steps"] = rst["player"]["steps"]
+        adv.player["step"] = rst["player"]["step"]
         # restore room's status
         for room, status in rst["rooms"].items():
             adv.rooms[room]["status"].clear()
@@ -228,9 +238,9 @@ def restore(adv):
         return adv.messages["ok"]
     return adv.messages["!!!"]
 
-def steps(adv):
+def step(adv):
     """show player's step count"""
-    return adv.messages["steps"].format(adv.player["steps"])
+    return adv.messages["step"].format(adv.player["step"])
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
     "words": ["én", "magam", "magamat", "engem"],
     "location": "terasz",
     "inventory": [],
-    "steps": 0,
+    "step": 0,
     "command": "",
     "commands": []
 }
