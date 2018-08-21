@@ -14,10 +14,10 @@ import os
 
 # constants
 
-EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
+RE_EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
 WRAP_WIDTH = 80
-HISTORY_LENGTH = 1000
-CHANGE_PROMPT = 5
+HISTORY_LENGTH = 20
+CHANGE_PROMPT = 5  # change to simple prompt after 5 steps
 
 
 # decorator classes: https://www.artima.com/weblogs/viewpost.jsp?thread=240808 and 240845
@@ -85,8 +85,9 @@ def main():
     adv = setup(*get_jsons())
     if not all(adv):
         sys.exit("Something went wrong, unable to start the game.")
-        
-    adv.player["commands"] = create_handlers(adv.commands)
+    
+    # create references to handler functions
+    adv.player["commands"] = {command: eval(command) for command in adv.commands}
 
     # init readline history
     readline.set_history_length(HISTORY_LENGTH)
@@ -119,7 +120,7 @@ def room_description(adv):
 @show
 @linewrap
 @react
-@Split(EXPLET)
+@Split(RE_EXPLET)
 def player_input(adv):
     """read player's next command"""
     prompt = ">" if adv.player["step"] > CHANGE_PROMPT else adv.messages["prompt"]
@@ -128,10 +129,6 @@ def player_input(adv):
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
-
-def create_handlers(commands):
-    """dynamically create handler functions"""
-    return {command: eval(command) for command in commands}
 
 def check(collection, *values, logic=all):
     """check if certain values are present in collection"""
