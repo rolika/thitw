@@ -14,28 +14,13 @@ import os
 
 # constants
 
-RE_EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
+EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
 WRAP_WIDTH = 80
 HISTORY_LENGTH = 20
 CHANGE_PROMPT = 5  # change to simple prompt after 5 steps
+MSG_OK = "Rendben."  # must be the same, as "ok" in commands.json
 
-
-# decorator classes: https://www.artima.com/weblogs/viewpost.jsp?thread=240808 and 240845
-# if the decorator has any arguments, using classes seems more understandable
-
-class Split:
-    """decorator class for regex splitting"""
-    def __init__(self, split_at):
-        """decorator argument is a raw string regexp"""
-        self.split_at = re.compile(split_at, flags=re.IGNORECASE)
-
-    def __call__(self, func):
-        """make the class callable, taking a function as argument"""
-        def splitter(adv):
-            """makes the actual splitting with the decorated function's argument"""
-            adv.player["command"] = list(filter(None, self.split_at.split(func(adv))))
-            return adv
-        return splitter
+RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
 
 # decorator functions
@@ -53,28 +38,13 @@ def show(func):
         print(func(adv))
     return shower
 
-def react(func):
-    """parse and execute player's command"""
-    def reactor(adv):
-        adv = func(adv)
-        execute = adv.player["commands"]
-        # first, look up for a verb
-        for com, words in adv.commands.items():
-            if check(words, *adv.player["command"], logic=any):
-                return execute[com](adv)
-        # second, look up for a movement direction
-        for words in adv.direction.values():
-            if check(words, *adv.player["command"], logic=any):
-                return execute["move"](adv)
-        # at last, the parser doesn't understand
-        return adv.messages["???"]
-    return reactor
-
 def increase_step(func):
     """increase step count"""
     def stepper(adv):
-        adv.player["step"] += 1
-        return func(adv)
+        msg = func(adv)
+        if msg == MSG_OK:  # only successful actions get counted
+            adv.player["step"] += 1
+        return msg
     return stepper
 
 
@@ -85,7 +55,7 @@ def main():
     adv = setup(*get_jsons())
     if not all(adv):
         sys.exit("Something went wrong, unable to start the game.")
-    
+
     # create references to handler functions
     adv.player["commands"] = {command: eval(command) for command in adv.commands}
 
@@ -117,14 +87,41 @@ def room_description(adv):
         return location["long"]
     return adv.messages["toodark"]
 
-@show
-@linewrap
-@react
-@Split(RE_EXPLET)
 def player_input(adv):
     """read player's next command"""
     prompt = ">" if adv.player["step"] > CHANGE_PROMPT else adv.messages["prompt"]
-    return input("{} ".format(prompt)).lower()
+    adv.player["command"] = input("{} ".format(prompt)).lower()
+    execute(adv)
+
+def execute(adv):
+    """execute player's command"""
+    adv.player["command"] = list(filter(None, RE_EXPLET.split(adv.player["command"])))
+    # again is very special, must be handled before anything else
+    if check(adv.commands["again"], *adv.player["command"], logic=any):
+        idx = readline.get_current_history_length()
+        if idx > 1:
+            readline.remove_history_item(idx - 1)
+            adv.player["command"] = readline.get_history_item(idx - 1)
+        else:
+            adv.player["command"] = ""
+        execute(adv)  # execute() is separated from player_input() because of this recursive call
+    else:
+        react(adv)
+
+@show
+@linewrap
+def react(adv):
+    exe = adv.player["commands"]
+    # first, look up for a verb
+    for com, words in adv.commands.items():
+        if check(words, *adv.player["command"], logic=any):
+            return exe[com](adv)
+    # second, look up for a movement direction
+    for words in adv.direction.values():
+        if check(words, *adv.player["command"], logic=any):
+            return exe["move"](adv)
+    # at last, the parser doesn't understand
+    return adv.messages["???"]
 
 def setup(*elements):
     """elements correspond to .json filenames"""
@@ -239,6 +236,9 @@ def step(adv):
     """show player's step count"""
     return adv.messages["step"].format(adv.player["step"])
 
+def again(adv):
+    """repeat last command - handled in execute(), just for placeholding"""
+    pass
 
 if __name__ == "__main__":
     main()
