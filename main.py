@@ -16,15 +16,14 @@ import os
 
 EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
 WRAP_WIDTH = 80
-HISTORY_LENGTH = 20
+HISTORY_BUFFER = 20
 CHANGE_PROMPT = 5  # change to simple prompt after 5 steps
-MSG_OK = "Rendben."  # must be the same, as "ok" in commands.json
+MSG_OK = "Rendben"  # must be the same as "ok" in commands.json, see in increase_step()
 
 RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
 
 # decorator functions
-# if the decorator takes no arguments, this way is simple enough
 
 def linewrap(func):
     """wrap lines"""
@@ -42,7 +41,7 @@ def increase_step(func):
     """increase step count"""
     def stepper(adv):
         msg = func(adv)
-        if msg == MSG_OK:  # only successful actions get counted
+        if msg.startswith(MSG_OK):  # only successful actions get counted
             adv.player["step"] += 1
         return msg
     return stepper
@@ -60,7 +59,7 @@ def main():
     adv.player["commands"] = {command: eval(command) for command in adv.commands}
 
     # init readline history
-    readline.set_history_length(HISTORY_LENGTH)
+    readline.set_history_length(HISTORY_BUFFER)
     readline.clear_history()
     readline.set_auto_history(True)
 
@@ -69,7 +68,6 @@ def main():
         room_description(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
         player_input(adv)
-        increase_step(adv)
 
 
 # helper functions
@@ -96,14 +94,8 @@ def player_input(adv):
 def execute(adv):
     """execute player's command"""
     adv.player["command"] = list(filter(None, RE_EXPLET.split(adv.player["command"])))
-    # again is very special, must be handled before anything else
     if check(adv.commands["again"], *adv.player["command"], logic=any):
-        idx = readline.get_current_history_length()
-        if idx > 1:
-            readline.remove_history_item(idx - 1)
-            adv.player["command"] = readline.get_history_item(idx - 1)
-        else:
-            adv.player["command"] = ""
+        again(adv)  # again is very special, must be handled before anything else
         execute(adv)  # execute() is separated from player_input() because of this recursive call
     else:
         react(adv)
@@ -236,9 +228,18 @@ def step(adv):
     """show player's step count"""
     return adv.messages["step"].format(adv.player["step"])
 
+@show
+@linewrap
 def again(adv):
     """repeat last command - handled in execute(), just for placeholding"""
-    pass
+    idx = readline.get_current_history_length()
+    if idx > 1:
+        readline.remove_history_item(idx - 1)
+        adv.player["command"] = readline.get_history_item(idx - 1)
+    else:
+        adv.player["command"] = ""
+    return adv.messages["repeat"] + adv.player["command"]
+
 
 if __name__ == "__main__":
     main()
