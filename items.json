@@ -1,0 +1,20 @@
+{
+    "lábtörlő": {
+        "long": "Ilyen elnyűtt és koszos lábtörlőt már jó ideje nem láttál. Valamilyen növényi rostból fonták, de az nagyon régen lehetett.",
+        "status": ["visible", "portable"],
+        "words": ["lábtörlő", "lábtörlőt", "lábtörlővel"],
+        "location": "terasz"
+    },
+    "kis kulcs": {
+        "long": "Egy meglehetősen kicsiny, ám annál jobban kidolgozott kulcs, mely a méretéhez képest meglepően nehéznek tűnik.",
+        "status": ["portable"],
+        "words": ["kis kulcs", "kis kulcsot", "kis kulccsal"],
+        "location": "terasz"
+    },
+    "zseblámpa": {
+        "long": "Bivalyerős, mégis takarékos ledlámpa.",
+        "status": ["visible", "portable"],
+        "words": ["zseblámpa", "zseblámpát", "zseblámpával", "ledlámpa", "ledlámpát", "ledlámpával"],
+        "location": "leltár"
+    }
+}

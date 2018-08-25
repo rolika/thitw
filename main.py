@@ -18,7 +18,7 @@ EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
 WRAP_WIDTH = 80
 HISTORY_BUFFER = 20
 CHANGE_PROMPT = 5  # change to simple prompt after 5 steps
-MSG_OK = "Rendben"  # must be the same as "ok" in commands.json, see in increase_step()
+MSG_OK = "Rendben"  # must be the same as value of "ok" in commands.json, see in increase_step()
 
 RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
@@ -34,7 +34,9 @@ def linewrap(func):
 def show(func):
     """show description"""
     def shower(adv):
-        print(func(adv))
+        text = func(adv)
+        if text:
+            print(text)
     return shower
 
 def increase_step(func):
@@ -58,7 +60,7 @@ def main():
     # create references to handler functions
     adv.player["commands"] = {command: eval(command) for command in adv.commands}
 
-    # init readline history
+    # setup readline history
     readline.set_history_length(HISTORY_BUFFER)
     readline.clear_history()
     readline.set_auto_history(True)
@@ -66,11 +68,12 @@ def main():
     # main game loop
     while check(adv.player["status"], "playing", "alive", "nowinner"):
         room_description(adv)
+        items_listing(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
         player_input(adv)
 
 
-# helper functions
+# adventure functions
 
 @show
 @linewrap
@@ -83,6 +86,17 @@ def room_description(adv):
         if "short" in adv.player["status"] or "visited" in location["status"]:
             return adv.player["location"].capitalize() + "."
         return location["long"]
+    return adv.messages["toodark"]
+
+@show
+@linewrap
+def items_listing(adv):
+    """provide listing of visible and portable items in the current location"""
+    if "visible" in adv.rooms[adv.player["location"]]["status"]:
+        items = [name for name, item in adv.items.items()\
+                 if item["location"] == adv.player["location"] and\
+                 check(item["status"], "visible", "portable")]
+        return adv.messages["items"].format(listing(items, definite=False)) if items else ""
     return adv.messages["toodark"]
 
 def player_input(adv):
@@ -115,6 +129,25 @@ def react(adv):
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
+def direction(adv):
+    """identify direction in command"""
+    for drc, words in adv.direction.items():
+        if check(words, *adv.player["command"], logic=any):
+            return drc
+    return None
+
+def savefile(adv):
+    """create or read savefile-name"""
+    sf = "default"
+    for com in adv.player["command"]:
+        if com.endswith(".save"):
+            sf = com.split(".")[0]
+            break
+    return sf
+
+
+# helper functions
+
 def setup(*elements):
     """elements correspond to .json filenames"""
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
@@ -127,12 +160,22 @@ def are_you_sure():
     """answer yes or no"""
     return input("Biztos vagy benne? ").lower().startswith("i")
 
-def direction(adv):
-    """identify direction in command"""
-    for drc, words in adv.direction.items():
-        if check(words, *adv.player["command"], logic=any):
-            return drc
-    return None
+def listing(words, definite=True):
+    """concatenate words lead by definite or indefinite articles"""
+    words = (article(word, definite) + " " + word for word in words)
+    return ", ".join(words)
+
+def article(word, definite):
+    """return article to word considering leading vowels"""
+    if definite:
+        if deaccent(word)[0] in "aeiou":
+            return "az"
+        return "a"
+    return "egy"        
+
+def deaccent(word):
+    """transfrom accented letters to non-accented"""
+    return word.lower().translate(str.maketrans("áéíóöőúüű", "aeiooouuu"))
 
 
 # json data persistence
@@ -165,15 +208,6 @@ def list2set(element):
         if type(element[key]) is list:
             element[key] = set(element[key])
     return element
-
-def savefile(adv):
-    """create or read savefile-name"""
-    sf = "default"
-    for com in adv.player["command"]:
-        if com.endswith(".save"):
-            sf = com.split(".")[0]
-            break
-    return sf
 
 
 # handler functions
