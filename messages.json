@@ -5,9 +5,9 @@
     "cantgo": "Arra nem mehetsz.",
     "toodark": "Túl sötét van, nem látsz semmit.",
     "!!!": "Hoppá, valami elromlott...",
-    "prompt": "Most mit teszel?",
+    "prompt": "Most mi legyen?",
     "step": "Eddig {} lépést tettél a játékban.",
-    "repeat": "Megismétlem: ",
+    "repeat": "Megismétled: ",
     "items": "Van itt {}.",
     "inventory": "Van nálad {}."
 }

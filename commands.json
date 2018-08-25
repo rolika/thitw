@@ -1,8 +1,8 @@
 {
-    "leave": ["kilépek", "abbahagyom", "vége"],
-    "move": ["megyek", "elmegyek", "elmászok", "elmászom"],
-    "save": ["ment", "mentek", "mentés", "save"],
-    "restore": ["tölt", "töltök", "töltés", "betölt", "betöltök", "betöltés", "load"],
+    "leave": ["hagyd", "vége"],
+    "move": ["menj", "mássz", "sétálj", "lépj"],
+    "save": ["ments", "mentsél", "mentés", "mentsd"],
+    "restore": ["tölts", "töltsél", "töltés", "töltsd"],
     "step": ["lépés", "lépések", "lépésszám"],
     "again": ["megint", "újra", "ismét"],
     "inventory": ["leltár", "leltározz", "nálam"]

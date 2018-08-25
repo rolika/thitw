@@ -10,5 +10,9 @@
     "up": ["fel", "felfelé", "felfele"],
     "down": ["le", "lefelé", "lefele"],
     "in": ["be", "bemegyek", "befelé", "befele", "bemászok", "bekúszok"],
-    "out": ["ki", "kimegyek", "kifelé", "kifele", "kimászok", "kikúszok"]
+    "out": ["ki", "kimegyek", "kifelé", "kifele", "kimászok", "kikúszok"],
+    "left": ["bal", "balra"],
+    "right": ["jobb", "jobbra"],
+    "forward": ["előre"],
+    "back": ["hátra"]
 }

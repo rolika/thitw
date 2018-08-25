@@ -4,54 +4,64 @@
         "status": ["visible"],
         "words": ["leltár", "leltárt", "leltárban"],
         "exits": {} },
+        
     "terasz": {
         "long": "Egy rémisztően régi ház teraszán állsz, mely sejtésed szerint olyan ősi titkot rejt, melyet igazán még magadnak sem mersz bevallani. A civilizációtól érintetlen erdő tisztását a napfény csak nehéz párákkal terhesen tudja megvilágítani, pedig kora délután érkeztél. A fura félhomályban ódon falak tornyosulnak fenyegetően föléd, korhadó favázukat kizárólag istenkáromló imádság tarthatja össze, a málló vakolat alól nedvesen csillogó téglák látszanak. A tető fazsindelyei viharvertek, nagy részük mohával borított. Az opálos ablaküvegek mögül rossz emlékek sötétje ásít, néhányuk bedeszkázva várja az elmúlást. Előtted, észak felé a bejárati ajtó vár rád.",
         "status": ["visible"],
         "words": ["ház", "házat", "házon", "terasz", "teraszt", "teraszon"],
-        "exits": { "n": "előtér", "in": "előtér" } },
+        "exits": { "n": "előtér", "in": "előtér", "forward": "előtér" } },
+        
     "előtér": {
-        "long": "Tépett, málló, világoszöld mintás tapéta púposodik és kunkorodik az előtér erős dohszagot árasztó falain. A nedves falakat alul megfakult, penészes, itt-ott hiányos faburkolat takarja, nagyjából derékmagasságig. A hajópadló a lábad alatt hangosan tiltakozik a rég nem viselt teher ellen. A mennyezetről súlyos porréteggel terhelt pókhálók lógnak. Északra egy folyosóban folytatódik a helyiség, míg délre a bejárati ajtó van.",
+        "long": "Tépett, málló, világoszöld mintás tapéta púposodik és kunkorodik az előtér erős dohszagot árasztó falain. A nedves falakat alul megfakult, penészes, itt-ott hiányos faburkolat takarja, nagyjából derékmagasságig. A hajópadló a lábad alatt hangosan tiltakozik a rég nem viselt teher ellen. A mennyezetről súlyos porréteggel terhelt pókhálók lógnak. Előtted északra egy folyosóban folytatódik a helyiség, míg mögötted délre a bejárati ajtó van.",
         "status": ["visible"],
         "words": ["előtér", "előteret", "előtérben"],
-        "exits": { "n": "folyosó", "s": "terasz", "in": "folyosó", "out": "terasz" } },
+        "exits": { "n": "folyosó", "s": "terasz", "in": "folyosó", "out": "terasz", "forward": "folyosó", "back": "terasz" } },
+        
     "folyosó": {
-        "long": "A folyosó falait az ablakokból gyéren csordogáló napfény világítja meg. Bármilyen óvatosan is próbálkozol haladni, lépteid zaja puskalövésekként hallatszanak a síri csöndben. Két ajtót látsz: a faajtó nyugatra, az üvegajtó keletre vezet. Kísérteties félhomályba burkolózó lépcsőkarok tűnnek el le és felfelé a sötétben.",
+        "long": "A folyosó falait az ablakokból gyéren csordogáló napfény világítja meg. Bármilyen óvatosan is próbálkozol haladni, lépteid zaja puskalövésekként hallatszanak a síri csöndben. Két ajtót látsz: balra a faajtó nyugatra, jobbra az üvegajtó keletre vezet. Kísérteties félhomályba burkolózó lépcsőkarok tűnnek el le és felfelé a sötétben. Vissza délre az előtérbe jutsz.",
         "status": ["visible"],
         "words": ["folyosó", "folyosót", "folyosón"],
-        "exits": { "e": "konyha", "s": "előtér", "w": "szoba", "up": "padlás", "down": "pince", "in": "szoba", "out": "előtér" } },
+        "exits": { "e": "konyha", "s": "előtér", "w": "szoba", "up": "padlás", "down": "pince", "in": "szoba", "out": "előtér", "left": "szoba", "right": "konyha", "back": "előtér" } },
+        
     "szoba": {
-        "long": "A ház egyetlen szobája étkezőként, nappaliként és hálószobaként is szolgált. Az északi falon hatalmas, rég kihűlt kandalló feketén ásítja a kémyénkürtőből leszivárgó koromszagú hideget. Mellette életnagyságú férfiszobor felsőteste nehezedik egy vaskos tölgyfaállványra. A bútorokat, asztalokat, székeket, kanapékat és az ágyat vastag, nedves por festi szürkére. Egy faajtó vezet keletre.",
+        "long": "A ház egyetlen szobája étkezőként, nappaliként és hálószobaként is szolgált. Az északi falon hatalmas, rég kihűlt kandalló feketén ásítja a kémyénkürtőből leszivárgó koromszagú hideget. Mellette életnagyságú férfiszobor felsőteste nehezedik egy vaskos tölgyfaállványra. A bútorokat, asztalokat, székeket, kanapékat és az ágyat vastag, nedves por festi szürkére. Egy faajtó vezet visszafelé keletre.",
         "status": ["visible"],
         "words": ["szoba", "szobát", "szobában", "étkező", "étkezőt", "étkezőben", "nappali", "nappalit", "nappaliban"],
-        "exits": { "e": "folyosó", "out": "folyosó" } },
+        "exits": { "e": "folyosó", "out": "folyosó", "right": "folyosó", "back": "folyosó" } },
+        
     "konyha": {
-        "long": "A konyhában szekrényajtós, fiókos konyhapult nyúlik végig az északi falon. Az öntöttvas mosogató valószerűtlenül elrozsdásodott, ahogy a csap is. Mindenütt por fedi a rég elhagyatott használati tárgyakat. A pult feletti szekrénysor ajtainak zsanérjai nem bírták az idő vasfogát, félig leszakadva lógnak. Az egyetlen kijárat, egy üvegajtó nyugatra van.",
+        "long": "A konyhában szekrényajtós, fiókos konyhapult nyúlik végig az északi falon. Az öntöttvas mosogató valószerűtlenül elrozsdásodott, ahogy a csap is. Mindenütt por fedi a rég elhagyatott használati tárgyakat. A pult feletti szekrénysor ajtainak zsanérjai nem bírták az idő vasfogát, félig leszakadva lógnak. Az egyetlen kijárat, egy üvegajtó balra (nyugatra) van.",
         "status": ["visible"],
         "words": ["konyha", "konyhát", "konyhában"],
-        "exits": { "w": "folyosó", "out": "folyosó" } },
+        "exits": { "w": "folyosó", "out": "folyosó", "left": "folyosó", "back": "folyosó" } },
+        
     "pince": {
         "long": "A pince nedves falai miazmás gőzöket lihegnek a mozdulatlan levegőbe. Felismerhetetlenné rozsdásodott fém alkatrészek, törött üvegek, lámpák törmeléke van itt egy kupacban. A nyugati falon jóval frissebb, de még így is nagyon régi, sebtiben befalazott boltív látszik. A pincéből egy lépcső vezet felfelé.",
         "status": [],
         "words": ["pince", "pincét", "pincében"],
-        "exits": { "up": "folyosó", "out": "folyosó" } },
+        "exits": { "up": "folyosó", "out": "folyosó", "back": "folyosó" } },
+        
     "padlás": {
-        "long": "A padlásablak félig megvakult üvegtábláin és a fazsindelyek közötti réseken betévedő napsugarak vigasztalhatatlan fényfoltokkal próbálják a sötétséget eloszlatni. Szúrágta, itt-ott korhadt szarufák sora veszik bele a sötétbe kelet felé. A padlásról lépcső vezet lefelé.",
+        "long": "A padlásablak félig megvakult üvegtábláin és a fazsindelyek közötti réseken betévedő napsugarak vigasztalhatatlan fényfoltokkal próbálják a sötétséget eloszlatni. Szúrágta, itt-ott korhadt szarufák sora veszik bele a sötétbe jobbra, kelet felé. A padlásról lépcső vezet lefelé, vissza a folyosóra.",
         "status": ["visible"],
         "words": ["padlás", "padlást", "padláson"],
-        "exits": { "k": "fedélszék", "down": "folyosó", "in": "fedélszék", "out": "folyosó" } },
+        "exits": { "k": "fedélszék", "down": "folyosó", "in": "fedélszék", "out": "folyosó", "forward": "fedélszék", "back": "folyosó" } },
+        
     "fedélszék": {
         "long": "A fedélszék mestergerendájáról vaskos, poros pókháló lógnak le. A fedélszék alá, óriási, vasalt faládát építettek; olyan nagy, hogy egyben nem fért volna fel a padláslépcsőn. Nyugat felé a padlás eleje játszik halvány kísértetfényben.",
         "status": [],
         "words": ["fedélszék", "fedélszéket", "fedélszéken"],
-        "exits": { "w": "padlás", "down": "barlang", "in": "barlang", "out": "padlás" } },
+        "exits": { "w": "padlás", "down": "barlang", "in": "barlang", "out": "padlás", "forward": "barlang", "back": "padlás" } },
+        
     "barlang": {
-        "long": "A ház alatti rejtett üreg olyan régi benyomást ébreszt benned, hogy bele sem mersz gondolni. A falak, a kövek furcsa, hátborzongatóan idegen geomteriával vesznek körül. A nyugati fal boltívének újabb keletű falazása, bár nem a kőműves mesterség csúcsa, mégis szinte otthonos barátsággal vonzza szemeidet. A keleti falra pillantva megáll benned az ütő: valami mintha átszivárgott volna a túloldalról egy alig kivehető, kolosszális kő ajtólap körvonalain át. A barlang közepén egy hatalmas gép terpeszkedik.",
+        "long": "A ház alatti rejtett üreg olyan régi benyomást ébreszt benned, hogy bele sem mersz gondolni. A falak, a kövek furcsa, hátborzongatóan idegen geomteriával vesznek körül. A nyugati fal boltívének újabb keletű falazása, bár nem a kőműves mesterség csúcsa, mégis szinte otthonos barátsággal vonzza szemeidet. Jobbra, a keleti falra pillantva megáll benned az ütő: valami mintha átszivárgott volna a túloldalról egy alig kivehető, kolosszális kő ajtólap körvonalain át. A barlang közepén egy hatalmas gép terpeszkedik.",
         "status": [],
         "words": ["barlang", "barlangot", "barlangban", "üreg", "üreget", "üregben"],
-        "exits": { "e": "sivatag", "up": "fedélszék", "in": "fedélszék", "out": "sivatag" } },
+        "exits": { "e": "sivatag", "up": "fedélszék", "in": "fedélszék", "out": "sivatag", "right": "sivatag", "forward": "sivatag", "back": "padlás" } },
+        
     "sivatag": {
         "long": "Egy idegen világban vagy, éjszaka van. Az égbolton soha nem látott alakzatban ragyognak a csillagok, és egy vérszínű hold vonja kétségbeejtő árnyalatba a környezetet. A köves, sivatagos táj vigasztalan látványa alig elviselhető, amit nem enyhít a kifacsart, elszáradt, torz, tüskés bokrok és kaktuszok szívszorító magánya.",
         "status": ["visible"],
         "words": ["sivatag", "sivatagot", "sivatagban"],
-        "exits": { "w": "barlang", "in": "barlang" } }
+        "exits": { "w": "barlang", "in": "barlang", "back": "barlang" } }
 }

@@ -97,7 +97,7 @@ def items_listing(adv):
                  if item["location"] == adv.player["location"] and\
                  check(item["status"], "visible", "portable")]
         return adv.messages["inventory" if adv.player["location"] == "leltár" else "items"]\
-               .format(listing(items, definite=False)) if items else ""
+               .format(listing(items)) if items else ""
     return adv.messages["toodark"]
 
 def player_input(adv):
@@ -137,15 +137,6 @@ def direction(adv):
             return drc
     return None
 
-def savefile(adv):
-    """create or read savefile-name"""
-    sf = "default"
-    for com in adv.player["command"]:
-        if com.endswith(".save"):
-            sf = com.split(".")[0]
-            break
-    return sf
-
 
 # helper functions
 
@@ -161,7 +152,16 @@ def are_you_sure():
     """answer yes or no"""
     return input("Biztos vagy benne? ").lower().startswith("i")
 
-def listing(words, definite=True):
+def savefile(command):
+    """create or read savefile-name"""
+    sf = "default"
+    for com in command:
+        if com.endswith(".save"):
+            sf = com.split(".")[0]
+            break
+    return sf
+
+def listing(words, definite=False):
     """concatenate words lead by definite or indefinite articles"""
     words = (article(word, definite) + " " + word for word in words)
     return ", ".join(words)
@@ -236,13 +236,13 @@ def save(adv):
                          "location": adv.player["location"],
                          "step": adv.player["step"]}}
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
-    if dump(tosave, savefile(adv) + ".save"):
+    if dump(tosave, savefile(adv.player["command"]) + ".save"):
         return adv.messages["ok"]
     return adv.messages["!!!"]
 
 def restore(adv):
     """restore saved game - look for provided filename ending .save"""
-    rst = load(savefile(adv), ext="save")
+    rst = load(savefile(adv.player["command"]), ext="save")
     if rst:
         # restore player
         adv.player["status"].clear()
