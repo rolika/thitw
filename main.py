@@ -96,7 +96,8 @@ def items_listing(adv):
         items = [name for name, item in adv.items.items()\
                  if item["location"] == adv.player["location"] and\
                  check(item["status"], "visible", "portable")]
-        return adv.messages["items"].format(listing(items, definite=False)) if items else ""
+        return adv.messages["inventory" if adv.player["location"] == "leltár" else "items"]\
+               .format(listing(items, definite=False)) if items else ""
     return adv.messages["toodark"]
 
 def player_input(adv):
@@ -233,7 +234,6 @@ def save(adv):
     """save game to .json file - provide filename ending .save"""
     tosave = {"player": {"status": list(adv.player["status"]),
                          "location": adv.player["location"],
-                         "inventory": list(adv.player["inventory"]),
                          "step": adv.player["step"]}}
     tosave.update({"rooms": {name: list(adv.rooms[name]["status"]) for name in adv.rooms}})
     if dump(tosave, savefile(adv) + ".save"):
@@ -248,7 +248,6 @@ def restore(adv):
         adv.player["status"].clear()
         adv.player["inventory"].clear()
         adv.player["status"].update(rst["player"]["status"])
-        adv.player["inventory"].update(rst["player"]["inventory"])
         adv.player["location"] = rst["player"]["location"]
         adv.player["step"] = rst["player"]["step"]
         # restore room's status
@@ -273,6 +272,15 @@ def again(adv):
     else:
         adv.player["command"] = ""
     return adv.messages["repeat"] + adv.player["command"]
+
+def inventory(adv):
+    """show items in player's inventory"""
+    backup_location = adv.player["location"]
+    adv.player["location"] = "leltár"
+    room_description(adv)
+    items_listing(adv)
+    adv.player["location"] = backup_location
+    return ""
 
 
 if __name__ == "__main__":
