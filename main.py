@@ -3,16 +3,18 @@ The House in the Woods
 Text adventure game
 """
 
-import json
-import re
-from collections import namedtuple
-import textwrap
+import json  # data persistence in the game
+import re  # splitting commands at expletive words
+from collections import namedtuple  # holds all game data
+import textwrap  # pretty printing on console
 import readline  # input() remembers previous entries
-import sys
-import os
+import sys  # exiting
+import os  # file handling
 
 
-# constants
+####################################################################################################
+# CONSTANTS
+####################################################################################################
 
 EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
 WRAP_WIDTH = 80
@@ -23,36 +25,108 @@ MSG_OK = "Rendben"  # must be the same as value of "ok" in commands.json, see in
 RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
 
-# decorator functions
+####################################################################################################
+# DECORATOR FUNCTIONS
+####################################################################################################
 
 def linewrap(func):
-    """wrap lines"""
+    """Wrap lines to fit to the output.
+    
+    Args:
+        func:   function to decorate
+
+    Modifies:   nothing
+
+    Returns:
+        function:   wrapper function
+    """
     def linewrapper(adv):
+        """Do the actual wrapping.
+        
+        Args:
+            adv:    decorated functions argument
+
+        Modifies:   nothing
+
+        Returns:
+            string: wrapped text
+        """
         return textwrap.fill(func(adv), width=WRAP_WIDTH)
     return linewrapper
 
 def show(func):
-    """show description"""
+    """Show text on the game's standard output.
+    Empty strings won't be showed to avoid empty lines on the output.
+    
+    Args:
+        func:   function to decorate
+
+    Modifies:   nothing
+
+    Returns:
+        function:   wrapper function
+    """
     def shower(adv):
+        """Do the actual printing.
+        
+        Args:
+            adv:    decorated functions argument
+
+        Modifies:   nothing
+
+        Returns:    nothing
+        """
         text = func(adv)
         if text:
             print(text)
     return shower
 
 def increase_step(func):
-    """increase step count"""
+    """Increase player's step count, but only if the command was successful.
+    
+    Args:
+        func:   function to decorate
+
+    Modifies:
+        adv:    although through the wrapper function
+
+    Returns:
+        function:   wrapper function
+    """
     def stepper(adv):
+        """Do the actual increase of step count by one.
+        
+        Args:
+            adv:    decorated functions argument
+
+        Modifies:
+            adv:    value in player["step"] is incremented by one
+
+        Returns:
+            string: whatever message the decorated function provides
+        """
         msg = func(adv)
         if msg.startswith(MSG_OK):  # only successful actions get counted
             adv.player["step"] += 1
         return msg
     return stepper
 
-
-# main executing function
+####################################################################################################
+# MAIN EXECUTING FUNCTION
+####################################################################################################
 
 def main():
+    """Main executing function.
+
+    Args:   none
+
+    Modifies:
+        adv:    through the called functions
+
+    Returns:    nothing
+    """
     # adventure-elements in a named tuple, access like adv.rooms or adv.player
+    # this adventure namedtuple will be passed around by functions allowing access to all game data
     adv = setup(*get_jsons())
     if not all(adv):
         sys.exit("Something went wrong, unable to start the game.")
@@ -73,12 +147,24 @@ def main():
         player_input(adv)
 
 
-# adventure functions
+####################################################################################################
+# ADVENTURING FUNCTIONS
+# All functions here have the single namedtuple argument that holds all the game's data.
+####################################################################################################
 
 @show
 @linewrap
 def room_description(adv):
-    """provide room description"""
+    """Provide room description.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: short name or long description of room or too dark message
+    """
     location = adv.rooms[adv.player["location"]]
     if "visible" in location["status"]:
         if "verbose" in adv.player["status"]:
@@ -91,7 +177,16 @@ def room_description(adv):
 @show
 @linewrap
 def items_listing(adv):
-    """provide listing of visible and portable items in the current location"""
+    """Provide listing of visible and portable items in the current location.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: short name listing of items or too dark message
+    """
     if "visible" in adv.rooms[adv.player["location"]]["status"]:
         items = [name for name, item in adv.items.items()\
                  if item["location"] == adv.player["location"] and\
@@ -101,13 +196,33 @@ def items_listing(adv):
     return adv.messages["toodark"]
 
 def player_input(adv):
-    """read player's next command"""
+    """Read player's next command.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:
+        adv:    player["command"] holds the input string
+
+    Returns:
+        string: although through execute() and react()
+    """
     prompt = ">" if adv.player["step"] > CHANGE_PROMPT else adv.messages["prompt"]
     adv.player["command"] = input("{} ".format(prompt)).lower()
     execute(adv)
 
 def execute(adv):
-    """execute player's command"""
+    """Execute player's command.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:
+        adv:    player["command"] holds the splitted command in a list of strings
+
+    Returns:
+        string: although through react()
+    """
     adv.player["command"] = list(filter(None, RE_EXPLET.split(adv.player["command"])))
     if check(adv.commands["again"], *adv.player["command"], logic=any):
         again(adv)  # again is very special, must be handled before anything else
@@ -118,42 +233,106 @@ def execute(adv):
 @show
 @linewrap
 def react(adv):
+    """Reaction to player's command.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: directly or through a handler function
+    """
     exe = adv.player["commands"]
-    # first, look up for a verb
-    for com, words in adv.commands.items():
-        if check(words, *adv.player["command"], logic=any):
-            return exe[com](adv)
-    # second, look up for a movement direction
+    # first, look up for a movement direction, as this is the most common command
     for words in adv.direction.values():
         if check(words, *adv.player["command"], logic=any):
             return exe["move"](adv)
+    # second, look up for a verb
+    for com, words in adv.commands.items():
+        if check(words, *adv.player["command"], logic=any):
+            return exe[com](adv)
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
 def direction(adv):
-    """identify direction in command"""
+    """Identify direction in command.
+    It is common in text adventures, that moving is specified only through directions, without any
+    verbs.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: containing a direction (key to recognized direction)
+    """
     for drc, words in adv.direction.items():
         if check(words, *adv.player["command"], logic=any):
             return drc
     return None
 
 
-# helper functions
+####################################################################################################
+# HELPER FUNCTIONS
+# Various functions to support the adventuring.
+# Common is, they don't take the adventure namedtuple as argument.
+####################################################################################################
 
 def setup(*elements):
-    """elements correspond to .json filenames"""
+    """Setup namedtuple holding all the game data.
+
+    Args:
+        *elements:  correspond to .json filenames in the current directory
+
+    Modifies:   nothing
+
+    Returns:
+        namedtuple: named adv with fieldnames corresponding to .json filenames
+    """
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
 
 def check(collection, *values, logic=all):
-    """check if certain values are present in collection"""
+    """Check if certain values are present in collection.
+
+    Args:
+        collection: iterable data collection
+        *values:    arbitrary numbers of values
+        logic:      keyword only argument, defaults to 'all', can be used with 'any' too
+
+    Modifies:   nothing
+
+    Returns:
+        boolean:    indicates result
+    """
     return logic(value in collection for value in values)
 
-def are_you_sure():
-    """answer yes or no"""
-    return input("Biztos vagy benne? ").lower().startswith("i")
+def confirm(question):
+    """Confirm a question with yes or no.
+
+    Args:
+        question:   string containing the confirmed question
+
+    Modifies:   nothing
+
+    Returns:
+        boolean:    indicates result
+    """
+    return input(question + " ").lower().startswith("i")
 
 def savefile(command):
-    """create or read savefile-name"""
+    """Create savefile-name.
+    If there's no valid name ending with .save, default.save used.
+
+    Args:
+        command:    string containing the player's last command
+
+    Modifies:   nothing
+
+    Returns:
+        string: complete filename with extension
+    """
     sf = "default"
     for com in command:
         if com.endswith(".save"):
@@ -162,32 +341,91 @@ def savefile(command):
     return sf
 
 def listing(words, definite=False):
-    """concatenate words lead by definite or indefinite articles"""
-    words = (article(word, definite) + " " + word for word in words)
+    """Concatenate words to a single string.
+
+    Args:
+        words:      collection of strings
+        definite:   True:   concatenate with definite articles
+                    False:  concatenate with indefinite articles
+                    None:   just concatenate
+
+    Modifies:   nothing
+
+    Returns:
+        string: a single sentence of concatenated words
+    """
+    words = (article(word, definite) + word for word in words)
     return ", ".join(words)
 
 def article(word, definite):
-    """return article to word considering leading vowels"""
+    """Article to word considering leading vowels.
+
+    Args:
+        word:       string containing a word
+        definite:   True:   concatenate with definite articles
+                    False:  concatenate with indefinite articles
+                    None:   just concatenate
+
+    Modifies:   nothing
+
+    Returns:
+        string: containing an article or empty
+    """
+    if definite is None:
+        return ""
     if definite:
         if deaccent(word)[0] in "aeiou":
-            return "az"
-        return "a"
-    return "egy"        
+            return "az "
+        return "a "
+    return "egy "
 
 def deaccent(word):
-    """transfrom accented letters to non-accented"""
+    """Transfrom accented letters to non-accented.
+
+    Args:
+        word:   string containing a word
+
+    Modifies:   nothing
+
+    Returns:
+        string: lowercased without accents
+    """
     return word.lower().translate(str.maketrans("áéíóöőúüű", "aeiooouuu"))
 
 
-# json data persistence
+####################################################################################################
+# JSON DATA PERSISTENCE
+# Functions here relate to data persistence used by the game.
+####################################################################################################
 
 def get_jsons():
-    """get all .json filenames from current directory"""
+    """Get all .json filenames from current directory.
+
+    Args:   none
+
+    Modifies:   nothing
+
+    Returns:
+        list of strings:    containing .json-filenames without extension
+    """
     with os.scandir() as it:
         return [entry.name.split(".")[0] for entry in it if entry.name.endswith(".json")]
 
 def load(element, ext="json"):
-    """adventure elements stored in dictionary"""
+    """Load adventure elements from .json-files.
+    As the JSON-format doesn't support sets, all lists in the .json files get converted to sets, see
+    list2set().
+
+    Args:
+        element:    .json-filename without extension
+        ext:        filename extension, used by savefile() too with .save extension
+
+    Modifies:   nothing
+
+    Returns:
+        dictionary: adventure element loaded from .json-file or
+        None:       if something went wrong
+    """
     try:
         with open(element + "." + ext, "r") as fo:
             return json.load(fo, object_hook=list2set)
@@ -195,7 +433,17 @@ def load(element, ext="json"):
         return None
 
 def dump(content, filename):
-    """write game data in json format"""
+    """Write game data in json format.
+
+    Args:
+        content:    data in a dictionary
+        filename:   filename with extension
+
+    Modifies:   nothing
+
+    Returns:
+        boolean:    indicates success
+    """
     try:
         with open(filename, "w") as fp:
             json.dump(content, fp, ensure_ascii=False, indent=4)
@@ -204,25 +452,62 @@ def dump(content, filename):
         return False
 
 def list2set(element):
-    """lists should become sets"""
+    """Lists should become sets.
+    Used as object hook in load(), especially in json.load().
+
+    Args:
+        element:    .json-element
+
+    Modifies:   nothing
+
+    Returns:
+        element:    itself unchanged or as set if the element was a list
+    """
     for key in element:
         if type(element[key]) is list:
             element[key] = set(element[key])
     return element
 
-
-# handler functions
+####################################################################################################
+# HANDLER FUNCTIONS
+# Function names must correspond to the keys in commands.json, see setup() and react().
+# Handler functions must take the adventure namedtuple as a single argument.
+# All functions must return some kind of a string message about the action taken. This is needed by
+# react()'s decorators.
+####################################################################################################
 
 def leave(adv):
-    """player exits the game"""
-    if are_you_sure():
+    """Player exits the game.
+    Asks for confirming before exiting.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:
+        adv:    player's status by removing 'playing'
+
+    Returns:
+        string: 'bye' message if really leaving or 'ok' if playing forth
+    """
+    if confirm(adv.messages["confirm"]):
         adv.player["status"].remove("playing")
         return adv.messages["bye"]
     return adv.messages["ok"]
 
 @increase_step
 def move(adv):
-    """player tries to move in a given direction"""
+    """Player tries to move in a given direction.
+    Examining objects increases the step count.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:
+        adv:    player's location
+
+    Returns:
+        string: message if moving was possible or a warning if it wasn't
+    """
     drc = direction(adv)
     destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
     if drc and destination:
@@ -231,7 +516,19 @@ def move(adv):
     return adv.messages["cantgo"]
 
 def save(adv):
-    """save game to .json file - provide filename ending .save"""
+    """save game to .json file - provide filename ending .save
+    Looks for provided filename ending .save, or default.save is used.
+    Will be saved:  player's status, location, steps
+                    status of all rooms
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: message if saving the game was successful or a warning if something went wrong
+    """
     tosave = {"player": {"status": list(adv.player["status"]),
                          "location": adv.player["location"],
                          "step": adv.player["step"]}}
@@ -241,7 +538,18 @@ def save(adv):
     return adv.messages["!!!"]
 
 def restore(adv):
-    """restore saved game - look for provided filename ending .save"""
+    """Restore saved game.
+    Looks for provided filename ending .save, or default.save is used.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:
+        adv:    player's data
+                all room status data
+    Returns:
+        string: message if restoring was successful or a warning if it wasn't
+    """
     rst = load(savefile(adv.player["command"]), ext="save")
     if rst:
         # restore player
@@ -258,13 +566,34 @@ def restore(adv):
     return adv.messages["!!!"]
 
 def step(adv):
-    """show player's step count"""
+    """Show player's step count.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   nothing
+
+    Returns:
+        string: message showing steps so far
+    """
     return adv.messages["step"].format(adv.player["step"])
 
 @show
 @linewrap
 def again(adv):
-    """repeat last command - handled in execute(), just for placeholding"""
+    """Repeat last command.
+    The actual repeating is in execute(), it digs here in readline's history.
+
+    Args:
+        adv:    namedtuple holding the game data
+
+    Modifies:
+        adv:    player's actual command ('again') is substituted with the command before or with an
+                empty string, if there wasn't any before (won't be recognized by the parser)
+
+    Returns:
+        string: message about repeating a certain command
+    """
     idx = readline.get_current_history_length()
     if idx > 1:
         readline.remove_history_item(idx - 1)
@@ -274,13 +603,43 @@ def again(adv):
     return adv.messages["repeat"] + adv.player["command"]
 
 def inventory(adv):
-    """show items in player's inventory"""
+    """Show items in player's inventory.
+     Uses the already available item_listing().
+
+    Args:
+        adv:    namedtuple holding the game data
+
+    Modifies:
+        adv:    temporarly modifies player's location
+
+    Returns:
+        string: empty, conform to the decorator
+    """
     backup_location = adv.player["location"]
     adv.player["location"] = "leltár"
-    room_description(adv)
     items_listing(adv)
     adv.player["location"] = backup_location
     return ""
+
+@increase_step
+def examine(adv):
+    """Lets the player look around.
+    Examining objects increases the step count.
+
+    Args:
+        adv:    namedtuple holding the game data
+
+    Modifies:
+        adv:    when successful, adds 'examined' status to object
+
+    Returns:
+        string: depending on examine
+                stands alone:   long description of current location
+                with item:      long description of that object
+                with inventory: inventory listing
+                or else:        warning message about unknown object
+    """
+    return adv.messages["unknown"]
 
 
 if __name__ == "__main__":
