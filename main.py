@@ -244,34 +244,15 @@ def react(adv):
         string: directly or through a handler function
     """
     exe = adv.player["commands"]
-    # first, look up for a movement direction, as this is the most common command
-    for words in adv.direction.values():
-        if check(words, *adv.player["command"], logic=any):
-            return exe["move"](adv)
-    # second, look up for a verb
-    for com, words in adv.commands.items():
-        if check(words, *adv.player["command"], logic=any):
-            return exe[com](adv)
+    # first, look up for a verb
+    com = idword(adv.commands, adv.player["command"])
+    if com:
+        return exe[com](adv)
+    # second, look up for a movement direction, as this is the most common command
+    if idword(adv.direction, adv.player["command"]):
+        return exe["move"](adv)
     # at last, the parser doesn't understand
     return adv.messages["???"]
-
-def direction(adv):
-    """Identify direction in command.
-    It is common in text adventures, that moving is specified only through directions, without any
-    verbs.
-
-    Args:
-        adv:    namedtuble holding the game data
-
-    Modifies:   nothing
-
-    Returns:
-        string: containing a direction (key to recognized direction)
-    """
-    for drc, words in adv.direction.items():
-        if check(words, *adv.player["command"], logic=any):
-            return drc
-    return None
 
 
 ####################################################################################################
@@ -392,6 +373,24 @@ def deaccent(word):
     """
     return word.lower().translate(str.maketrans("áéíóöőúüű", "aeiooouuu"))
 
+def idword(vocabulary, command):
+    """Check if command contains a known word in the vocabulary.
+
+    Args:
+        vocabulary: dictionary containing keywords and its synonyms
+        command:    list of strings
+
+    Modifies:   nothing
+
+    Returns:
+        string: identified keyword or
+        None:   no match found
+    """
+    for keyword, synonyms in vocabulary.items():
+        if check(synonyms, *command, logic=any):
+            return keyword
+    return None
+
 
 ####################################################################################################
 # JSON DATA PERSISTENCE
@@ -508,7 +507,7 @@ def move(adv):
     Returns:
         string: message if moving was possible or a warning if it wasn't
     """
-    drc = direction(adv)
+    drc = idword(adv.direction, adv.player["command"])
     destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
     if drc and destination:
         adv.player["location"] = destination
