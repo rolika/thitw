@@ -26,12 +26,58 @@ RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
 
 ####################################################################################################
+# DECORATOR CLASSES
+####################################################################################################
+
+class Teleport:
+    """Decorator class to temporary teleport the player to a new location, perform the decorated
+    function, and return the player to its original location.
+    """
+    def __init__(self, location):
+        """Class initializer.
+
+        Args:
+            location:   string: relocate player to this location
+        """
+        self._location = location
+
+    def __call__(self, func):
+        """Decorator class must be callable.
+
+        Args:
+            func:   function to decorate
+
+        Modifies:   nothing
+
+        Returns:
+            function:   wrapper function
+        """
+        def teleporter(adv):
+            """Relocate player and perform decorated function.
+
+            Args:
+                adv:    decorated functions argument
+
+            Modifies:   nothing
+
+            Returns:
+                string: empty string to conform other decorators
+            """
+            backup_location = adv.player["location"]
+            adv.player["location"] = self._location
+            func(adv)
+            adv.player["location"] = backup_location
+            return ""
+        return teleporter
+
+
+####################################################################################################
 # DECORATOR FUNCTIONS
 ####################################################################################################
 
 def linewrap(func):
     """Wrap lines to fit to the output.
-    
+
     Args:
         func:   function to decorate
 
@@ -42,7 +88,7 @@ def linewrap(func):
     """
     def linewrapper(adv):
         """Do the actual wrapping.
-        
+
         Args:
             adv:    decorated functions argument
 
@@ -57,7 +103,7 @@ def linewrap(func):
 def show(func):
     """Show text on the game's standard output.
     Empty strings won't be showed to avoid empty lines on the output.
-    
+
     Args:
         func:   function to decorate
 
@@ -68,7 +114,7 @@ def show(func):
     """
     def shower(adv):
         """Do the actual printing.
-        
+
         Args:
             adv:    decorated functions argument
 
@@ -83,7 +129,7 @@ def show(func):
 
 def increase_step(func):
     """Increase player's step count.
-    
+
     Args:
         func:   function to decorate
 
@@ -95,7 +141,7 @@ def increase_step(func):
     """
     def stepper(adv):
         """Do the actual increase of step count by one.
-        
+
         Args:
             adv:    decorated functions argument
 
@@ -109,35 +155,6 @@ def increase_step(func):
         return func(adv)
     return stepper
 
-def teleport(func):
-    """Teleport the player into its inventory, call function, teleport back.
-    
-    Args:
-        func:   function to decorate
-
-    Modifies:   nothing
-
-    Returns:
-        function:   wrapper function
-    """
-    def teleporter(adv):
-        """Do the actual teleport.
-        
-        Args:
-            adv:    decorated functions argument
-
-        Modifies:
-            adv:    player's location, only temporarly
-
-        Returns:
-            string: empty string to conform the decorator
-        """
-        backup_location = adv.player["location"]
-        adv.player["location"] = "leltár"
-        func(adv)
-        adv.player["location"] = backup_location
-        return ""
-    return teleporter
 
 ####################################################################################################
 # MAIN EXECUTING FUNCTION
@@ -499,7 +516,7 @@ def list2set(element):
 # HANDLER FUNCTIONS
 # Function names must correspond to the keys in commands.json, see setup() and react().
 # Handler functions must take the adventure namedtuple as a single argument.
-# All functions must return some kind of a string message about the action taken. This is needed by
+# All functions must return some kind of a string message about the action taken to conform to
 # react()'s decorators.
 ####################################################################################################
 
@@ -630,7 +647,7 @@ def again(adv):
     return adv.messages["repeat"] + adv.player["command"]
 
 @increase_step
-@teleport
+@Teleport("leltár")
 def inventory(adv):
     """Show items in player's inventory.
      Uses the already available item_listing() through 'teleporting' the player into its inventory.
@@ -638,14 +655,11 @@ def inventory(adv):
     Args:
         adv:    namedtuple holding the game data
 
-    Modifies:
-        adv:    temporarly modifies player's location
+    Modifies:   nothing
 
-    Returns:
-        string: empty, conform to the decorator
+    Returns:    nothing
     """
     items_listing(adv)
-    return ""
 
 @increase_step
 def examine(adv):
