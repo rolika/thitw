@@ -82,7 +82,7 @@ def show(func):
     return shower
 
 def increase_step(func):
-    """Increase player's step count, but only if the command was successful.
+    """Increase player's step count.
     
     Args:
         func:   function to decorate
@@ -105,11 +105,39 @@ def increase_step(func):
         Returns:
             string: whatever message the decorated function provides
         """
-        msg = func(adv)
-        if msg.startswith(MSG_OK):  # only successful actions get counted
-            adv.player["step"] += 1
-        return msg
+        adv.player["step"] += 1
+        return func(adv)
     return stepper
+
+def teleport(func):
+    """Teleport the player into its inventory, call function, teleport back.
+    
+    Args:
+        func:   function to decorate
+
+    Modifies:   nothing
+
+    Returns:
+        function:   wrapper function
+    """
+    def teleporter(adv):
+        """Do the actual teleport.
+        
+        Args:
+            adv:    decorated functions argument
+
+        Modifies:
+            adv:    player's location, only temporarly
+
+        Returns:
+            string: empty string to conform the decorator
+        """
+        backup_location = adv.player["location"]
+        adv.player["location"] = "leltár"
+        func(adv)
+        adv.player["location"] = backup_location
+        return ""
+    return teleporter
 
 ####################################################################################################
 # MAIN EXECUTING FUNCTION
@@ -601,9 +629,11 @@ def again(adv):
         adv.player["command"] = ""
     return adv.messages["repeat"] + adv.player["command"]
 
+@increase_step
+@teleport
 def inventory(adv):
     """Show items in player's inventory.
-     Uses the already available item_listing().
+     Uses the already available item_listing() through 'teleporting' the player into its inventory.
 
     Args:
         adv:    namedtuple holding the game data
@@ -614,10 +644,7 @@ def inventory(adv):
     Returns:
         string: empty, conform to the decorator
     """
-    backup_location = adv.player["location"]
-    adv.player["location"] = "leltár"
     items_listing(adv)
-    adv.player["location"] = backup_location
     return ""
 
 @increase_step
