@@ -15,6 +15,6 @@
         "long": "Bivalyerős, mégis takarékos ledlámpa.",
         "status": ["visible", "portable"],
         "words": ["zseblámpa", "zseblámpát", "zseblámpával", "ledlámpa", "ledlámpát", "ledlámpával"],
-        "location": "leltár"
+        "location": "inventory"
     }
 }

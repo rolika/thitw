@@ -29,7 +29,7 @@ RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 # DECORATOR CLASSES
 ####################################################################################################
 
-class Teleport:
+class Relocate:
     """Decorator class to temporary teleport the player to a new location, perform the decorated
     function, and return the player to its original location.
     """
@@ -52,7 +52,7 @@ class Teleport:
         Returns:
             function:   wrapper function
         """
-        def teleporter(adv):
+        def relocator(adv):
             """Relocate player and perform decorated function.
 
             Args:
@@ -68,7 +68,7 @@ class Teleport:
             func(adv)
             adv.player["location"] = backup_location
             return ""
-        return teleporter
+        return relocator
 
 
 ####################################################################################################
@@ -185,7 +185,7 @@ def main():
     readline.set_auto_history(True)
 
     # main game loop
-    while check(adv.player["status"], "playing", "alive", "nowinner"):
+    while check(adv.player["status"], "playing", "alive", "nowinner", logic=all):
         room_description(adv)
         items_listing(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
@@ -232,12 +232,11 @@ def items_listing(adv):
     Returns:
         string: short name listing of items or too dark message
     """
-    if "visible" in adv.rooms[adv.player["location"]]["status"]:
-        items = [name for name, item in adv.items.items()\
-                 if item["location"] == adv.player["location"] and\
-                 check(item["status"], "visible", "portable")]
-        return adv.messages["inventory" if adv.player["location"] == "leltár" else "items"]\
-               .format(listing(items)) if items else ""
+    location = adv.player["location"]
+    if "visible" in adv.rooms[location]["status"]:
+        items = get_items(adv, location, "visible", "portable", logic=all)
+        return adv.messages["inventory" if location == "inventory" else "items"]\
+               .format(sentence(items)) if items else ""
     return adv.messages["toodark"]
 
 def player_input(adv):
@@ -289,16 +288,47 @@ def react(adv):
         string: directly or through a handler function
     """
     exe = adv.player["commands"]
+    command = adv.player["command"]
     # first, look up for a verb
-    com = idword(adv.commands, adv.player["command"])
+    com = idword(adv.commands, command)
     if com:
         return exe[com](adv)
     # second, look up for a movement direction, as this is the most common command
-    if idword(adv.direction, adv.player["command"]):
+    if idword(adv.direction, command):
         return exe["move"](adv)
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
+def vocabulary(adv, element):
+    """Make a dictionary of known words.
+
+    Args:
+        adv:        namedtuble holding the game data
+        element:    element name in the namedtuple
+
+    Modifies:   nothing
+
+    Returns:
+        dict:   with names as keywords and synonyms as values
+    """
+    return {name: props["words"] for name, props in getattr(adv, element).items()}
+
+def get_items(adv, location, *status, logic):
+    """Get all item names in the current location.
+
+    Args:
+        adv:        namedtuble holding the game data
+        location:   to retrieve items from
+        status:     filter for these statuses
+        logic:      function reference to all or any
+
+    Modifies:   nothing
+
+    Returns:
+        string: set of strings containing item names
+    """
+    return [name for name, item in adv.items.items() if item["location"] == location and\
+            check(item["status"], *status, logic=logic)]
 
 ####################################################################################################
 # HELPER FUNCTIONS
@@ -319,13 +349,13 @@ def setup(*elements):
     """
     return namedtuple("adv", " ".join(elements))._make(map(load, elements))
 
-def check(collection, *values, logic=all):
+def check(collection, *values, logic):
     """Check if certain values are present in collection.
 
     Args:
         collection: iterable data collection
         *values:    arbitrary numbers of values
-        logic:      keyword only argument, defaults to 'all', can be used with 'any' too
+        logic:      function reference to all aor any
 
     Modifies:   nothing
 
@@ -366,7 +396,7 @@ def savefile(command):
             break
     return sf
 
-def listing(words, definite=False):
+def sentence(words, definite=False):
     """Concatenate words to a single string.
 
     Args:
@@ -647,10 +677,10 @@ def again(adv):
     return adv.messages["repeat"] + adv.player["command"]
 
 @increase_step
-@Teleport("leltár")
+@Relocate("inventory")
 def inventory(adv):
     """Show items in player's inventory.
-     Uses the already available item_listing() through 'teleporting' the player into its inventory.
+     Uses the already available item_listing() through relocating the player into its inventory.
 
     Args:
         adv:    namedtuple holding the game data
@@ -673,12 +703,30 @@ def examine(adv):
         adv:    when successful, adds 'examined' status to object
 
     Returns:
-        string: depending on examine
-                stands alone:   long description of current location
-                with item:      long description of that object
-                with inventory: inventory listing
-                or else:        warning message about unknown object
+        string: depending on examine stands with
+                room or
+                alone or
+                indicating looking around:  long description of current location
+                item:                       long description of that object
+                inventory:                  inventory listing
+                or else:                    warning message about unknown object
     """
+    location = adv.player["location"]
+    command = adv.player["command"]
+    # check for inventory
+    if check(adv.commands["inventory"], *command, logic=any):
+        return inventory(adv)
+    # check for an item
+    available_items = get_items(adv, location, "visible", "portable", logic=all)
+    available_items += get_items(adv, "inventory", "visible", "portable", logic=all)
+    item = idword(vocabulary(adv, "items"), command)
+    if item in available_items:
+        return adv.items[item]["long"]
+    # check for current room name or indicating looking around or examine stands alone
+    room = idword(vocabulary(adv, "rooms"), command)
+    misc = idword(adv.misc, command)
+    if room == location or misc == "everything" or len(command) == 1:
+        return adv.rooms[location]["long"]
     return adv.messages["unknown"]
 
 
