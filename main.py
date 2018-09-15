@@ -236,8 +236,13 @@ def items_listing(adv):
     location = adv.player["location"]
     if "visible" in adv.rooms[location]["status"]:
         items = get_items(adv, location, "visible", "portable", logic=all)
-        return adv.messages["inventory" if location == "inventory" else "items"]\
-               .format(sentence(items)) if items else ""
+        if location == "inventory":
+            msg = adv.messages["inventory"]
+            definite = True
+        else:
+            msg = adv.messages["items"]
+            definite = False
+        return msg.format(sentence(items, definite=definite)) if items else ""
     return adv.messages["toodark"]
 
 def player_input(adv):
