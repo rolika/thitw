@@ -190,6 +190,7 @@ def main():
         items_listing(adv)
         adv.rooms[adv.player["location"]]["status"].add("visited")
         player_input(adv)
+        predefined_events(adv)
 
 
 ####################################################################################################
@@ -329,6 +330,21 @@ def get_items(adv, location, *status, logic):
     """
     return [name for name, item in adv.items.items() if item["location"] == location and\
             check(item["status"], *status, logic=logic)]
+
+def predefined_events(adv):    
+    """Handle predefined actions.
+
+    Args:
+        adv:    namedtuble holding the game data
+
+    Modifies:   adv
+
+    Returns:    nothing
+    """
+    # examining or taking the door mat reveals the hidden key
+    doormat = adv.items["lábtörlő"]
+    if "examined" in doormat["status"] or doormat["location"] == "inventory":
+        adv.items["kis kulcs"]["status"].add("visible")
 
 ####################################################################################################
 # HELPER FUNCTIONS
@@ -721,11 +737,13 @@ def examine(adv):
     available_items += get_items(adv, "inventory", "visible", "portable", logic=all)
     item = idword(vocabulary(adv, "items"), command)
     if item in available_items:
+        adv.items[item]["status"].add("examined")
         return adv.items[item]["long"]
     # check for current room name or indicating looking around or examine stands alone
     room = idword(vocabulary(adv, "rooms"), command)
     misc = idword(adv.misc, command)
-    if room == location or misc == "everything" or len(command) == 1:
+    if room == location or misc == "everything" or len(command) == 1:        
+        adv.rooms[location]["status"].add("examined")
         return adv.rooms[location]["long"]
     return adv.messages["unknown"]
 
