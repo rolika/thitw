@@ -11,5 +11,6 @@
     "repeat": "Megismétled: ",
     "items": "Van itt {}.",
     "inventory": "Nálad van {}.",
-    "unknown": "Nem látok itt ilyesmit."
+    "unknown": "Nem látok itt ilyesmit.",
+    "reveal": "Jobban megnézve, van itt valami!"
 }

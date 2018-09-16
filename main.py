@@ -16,11 +16,11 @@ import os  # file handling
 # CONSTANTS
 ####################################################################################################
 
-EXPLET = r"\s*(?:\b\s\b|\baz?\b|\bés\b|\begy\b|\bplusz\b)\s*"
+EXPLET = r"\s*(?:\b\s+\b|\baz?\b|\bés\b|\begy\b|\bplusz\b|\bmeg\b)\s*"
 WRAP_WIDTH = 80
 HISTORY_BUFFER = 20
 CHANGE_PROMPT = 5  # change to simple prompt after 5 steps
-MSG_OK = "Rendben"  # must be the same as value of "ok" in commands.json, see in increase_step()
+SEPARATOR = "________________________________________________________________________________"
 
 RE_EXPLET = re.compile(EXPLET, flags=re.IGNORECASE)
 
@@ -95,9 +95,12 @@ def linewrap(func):
         Modifies:   nothing
 
         Returns:
-            string: wrapped text
+            string: wrapped text or
+            None:   if received an empty string or None
         """
-        return textwrap.fill(func(adv), width=WRAP_WIDTH)
+        text = func(adv)
+        if text:
+            return textwrap.fill(text, width=WRAP_WIDTH)
     return linewrapper
 
 def show(func):
@@ -336,7 +339,9 @@ def get_items(adv, location, *status, logic):
     return [name for name, item in adv.items.items() if item["location"] == location and\
             check(item["status"], *status, logic=logic)]
 
-def predefined_events(adv):    
+@show
+@linewrap
+def predefined_events(adv):
     """Handle predefined actions.
 
     Args:
@@ -346,10 +351,11 @@ def predefined_events(adv):
 
     Returns:    nothing
     """
-    # examining or taking the door mat reveals the hidden key
+    # examining or taking the door mat reveals the small key
     doormat = adv.items["lábtörlő"]
     if "examined" in doormat["status"] or doormat["location"] == "inventory":
         adv.items["kis kulcs"]["status"].add("visible")
+        return adv.messages["reveal"]
 
 ####################################################################################################
 # HELPER FUNCTIONS
@@ -417,19 +423,19 @@ def savefile(command):
             break
     return sf
 
-def sentence(words, definite=False):
+def sentence(words, definite):
     """Concatenate words to a single string.
 
     Args:
         words:      collection of strings
         definite:   True:   concatenate with definite articles
                     False:  concatenate with indefinite articles
-                    None:   just concatenate
+                    None:   just separate with commas
 
     Modifies:   nothing
 
     Returns:
-        string: a single sentence of concatenated words
+        string: a single sentence of commas separated words
     """
     words = (article(word, definite) + word for word in words)
     return ", ".join(words)
@@ -747,7 +753,7 @@ def examine(adv):
     # check for current room name or indicating looking around or examine stands alone
     room = idword(vocabulary(adv, "rooms"), command)
     misc = idword(adv.misc, command)
-    if room == location or misc == "everything" or len(command) == 1:        
+    if room == location or misc == "everything" or len(command) == 1:
         adv.rooms[location]["status"].add("examined")
         return adv.rooms[location]["long"]
     return adv.messages["unknown"]
