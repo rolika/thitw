@@ -12,5 +12,6 @@
     "items": "Van itt {}.",
     "inventory": "Nálad van {}.",
     "unknown": "Nem látok itt ilyesmit.",
-    "reveal": "Jobban megnézve, van itt valami!"
+    "reveal": "Jobban megnézve, van itt valami!",
+    "specify": "Fogalmazz pontosabban."
 }

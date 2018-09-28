@@ -353,9 +353,13 @@ def predefined_events(adv):
     """
     # examining or taking the door mat reveals the small key
     doormat = adv.items["lábtörlő"]
-    if "examined" in doormat["status"] or doormat["location"] == "inventory":
-        adv.items["kis kulcs"]["status"].add("visible")
+    smallkey = adv.items["kis kulcs"]
+    if ("examined" in doormat["status"] or doormat["location"] == "inventory")\
+       and "hidden" in smallkey["status"]:
+        smallkey["status"].add("visible")
+        smallkey["status"].remove("hidden")
         return adv.messages["reveal"]
+
 
 ####################################################################################################
 # HELPER FUNCTIONS
@@ -492,7 +496,6 @@ def idword(vocabulary, command):
         if check(synonyms, *command, logic=any):
             return keyword
     return None
-
 
 ####################################################################################################
 # JSON DATA PERSISTENCE
@@ -748,8 +751,11 @@ def examine(adv):
     available_items += get_items(adv, "inventory", "visible", "portable", logic=all)
     item = idword(vocabulary(adv, "items"), command)
     if item in available_items:
-        adv.items[item]["status"].add("examined")
-        return adv.items[item]["long"]
+        item = adv.items[item]
+        if not item["marker"] or check(item["marker"], *command, logic=any):
+            item["status"].add("examined")
+            return item["long"]
+        return adv.messages["specify"]
     # check for current room name or indicating looking around or examine stands alone
     room = idword(vocabulary(adv, "rooms"), command)
     misc = idword(adv.misc, command)
