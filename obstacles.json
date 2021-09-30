@@ -1,0 +1,35 @@
+{
+    "bejárati ajtó": {
+        "long": "Erőteljes, megvasalt tölgyfa bejárati ajtó, rajta rabláncra fűzött groteszk szörnyalak vicsorgó pofája várja, hogy valaki bekopogjon súlyos orrkarikájával. A roppant kilincs alatti kicsiny kulcslyuk valószerűtlenül finom kidolgozású zárat sejtet.",
+        "passive": "A bejárati ajtó be van csukva, ráadásul zárva is van.",
+        "active": "",
+        "lethal": "",
+        "overcome": "",
+        "marker": ["bejárati"],
+        "status": ["closed", "locked"],
+        "words": ["ajtó", "ajtót", "ajtóval"],
+        "location": ["terasz", "előtér"]
+    },
+    "csapóajtó": {
+        "long": "A csapóajtó körvonalai éppenhogy kivehetők a padlódeszkák között.",
+        "passive": "",
+        "active": "",
+        "lethal": "A padló megnyílik a lábad alatt és csak zuhansz, zuhansz lefelé a sötétségbe.",
+        "overcome": "Vigyázva kikerülöd a padlódeszkák között átsejlő csapóajtót.",
+        "marker": [],
+        "status": [],
+        "words": ["csapóajtó", "csapóajtót", "csapóajtóval"],
+        "location": ["előtér", "folyosó"]
+    },
+    "zombi": {
+        "long": "Egy rothadó holttest, ami valamiképpen életre kelt. Fekete nyelve ide-oda vándorol a szájában, fogai céltalanul őrölnek egymáson. Iszonyú büdös!",
+        "passive": "Egy zombi álldogál bizonytalan lábakon a közelben. Lassan dülöngél előre-hátra.",
+        "active": "A zombi feszülten áll, opálos szemei rád szegeződnek!",
+        "lethal": "A zombi hirtelen kinyúl feléd és megragad! Rothadó fogai felé húz, érzed a szája irtóztató szagát, és ahogy a fogai beléd mélyednek. Aztán sötét lesz...",
+        "overcome": "Egy szétroncsolt fejű holttest van itt.",
+        "marker": [],
+        "status": ["active"],
+        "words": ["csapóajtó", "csapóajtót", "csapóajtóval"],
+        "location": ["előtér"]
+    }
+}

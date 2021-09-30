@@ -5,7 +5,7 @@ Text adventure game
 
 import json  # data persistence in the game
 import re  # splitting commands at expletive words
-from collections import namedtuple  # holds all game data
+import collections  # namedtuple holds all game data
 import textwrap  # pretty printing on console
 import readline  # input() remembers previous entries
 import sys  # exiting
@@ -308,19 +308,18 @@ def react(adv):
     # at last, the parser doesn't understand
     return adv.messages["???"]
 
-def vocabulary(adv, element):
+def vocabulary(advelem, words="words"):
     """Make a dictionary of known words.
 
     Args:
-        adv:        namedtuble holding the game data
-        element:    element name in the namedtuple
+        advelem:    adventure element name in the namedtuple
 
     Modifies:   nothing
 
     Returns:
         dict:   with names as keywords and synonyms as values
     """
-    return {name: props["words"] for name, props in getattr(adv, element).items()}
+    return {name: props[words] for name, props in advelem.items()}
 
 def get_items(adv, location, *status, logic):
     """Get all item names in the current location.
@@ -334,7 +333,7 @@ def get_items(adv, location, *status, logic):
     Modifies:   nothing
 
     Returns:
-        string: set of strings containing item names
+        string: list of strings containing item names
     """
     return [name for name, item in adv.items.items() if item["location"] == location and\
             check(item["status"], *status, logic=logic)]
@@ -378,7 +377,7 @@ def setup(*elements):
     Returns:
         namedtuple: named adv with fieldnames corresponding to .json filenames
     """
-    return namedtuple("adv", " ".join(elements))._make(map(load, elements))
+    return collections.namedtuple("adv", " ".join(elements))._make(map(load, elements))
 
 def check(collection, *values, logic):
     """Check if certain values are present in collection.
@@ -612,9 +611,23 @@ def move(adv):
     Returns:
         string: message if moving was possible or a warning if it wasn't
     """
+    location = adv.player["location"]
     drc = idword(adv.direction, adv.player["command"])
-    destination = adv.rooms[adv.player["location"]]["exits"].get(drc)
+    destination = adv.rooms[location]["exits"].get(drc)
     if drc and destination:
+        # check for obstacles
+        obstacles = vocabulary(adv.obstacles, "location")
+        obstacle = idword(obstacles, [location])
+        if obstacle:
+            obstacle = adv.obstacles[obstacle]
+            # related between two locations
+            if destination in obstacle["location"]:
+                # it's a trap
+                if obstacle["lethal"]:
+                    adv.player["status"].remove("alive")
+                    return obstacle["lethal"]
+                # it's a door
+                print(obstacle)
         adv.player["location"] = destination
         return adv.messages["ok"]
     return adv.messages["cantgo"]
@@ -749,7 +762,7 @@ def examine(adv):
     # check for an item
     available_items = get_items(adv, location, "visible", "portable", logic=all)
     available_items += get_items(adv, "inventory", "visible", "portable", logic=all)
-    item = idword(vocabulary(adv, "items"), command)
+    item = idword(vocabulary(adv.items), command)
     if item in available_items:
         item = adv.items[item]
         if not item["marker"] or check(item["marker"], *command, logic=any):
@@ -757,7 +770,7 @@ def examine(adv):
             return item["long"]
         return adv.messages["specify"]
     # check for current room name or indicating looking around or examine stands alone
-    room = idword(vocabulary(adv, "rooms"), command)
+    room = idword(vocabulary(adv.rooms), command)
     misc = idword(adv.misc, command)
     if room == location or misc == "everything" or len(command) == 1:
         adv.rooms[location]["status"].add("examined")
